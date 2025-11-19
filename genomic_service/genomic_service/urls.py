@@ -12,10 +12,6 @@ urlpatterns = [
     #Librerias externas
      path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    
-    # Aplicaciones
-    path('api/genes/', include('apps.genes.urls')),
-    path('api/variants/', include('apps.variants.urls')),
-    path('api/patient-reports/', include('apps.patient_reports.urls')),
+
 
 ]
