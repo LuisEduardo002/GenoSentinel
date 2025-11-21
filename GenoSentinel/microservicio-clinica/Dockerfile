@@ -2,24 +2,27 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Instalar curl para el HEALTHCHECK
+RUN apk add --no-cache curl
+
+# Copiar package.json y package-lock.json
 COPY package*.json ./
 
-# Install dependencies
+# Instalar dependencias (solo producción)
 RUN npm ci --only=production
 
-# Copy source code
+# Copiar el resto del código
 COPY . .
 
-# Build the application
+# Construir la aplicación
 RUN npm run build
 
-# Expose port
+# Puerto del microservicio
 EXPOSE 3001
 
-# Health check
+# Health check del contenedor
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3001/health || exit 1
 
-# Start the application
+# Comando de arranque
 CMD ["npm", "run", "start:prod"]

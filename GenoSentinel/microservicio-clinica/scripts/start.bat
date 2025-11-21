@@ -1,5 +1,5 @@
 @echo off
-echo 🏥 Iniciando Microservicio Clínica - GenoSentinel
+echo Iniciando Microservicio Clínica - GenoSentinel
 echo.
 
 echo Verificando dependencias...
