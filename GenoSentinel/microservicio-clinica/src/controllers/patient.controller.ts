@@ -9,7 +9,7 @@ import { UpdatePatientDto } from '../dto/update-patient.dto';
 export class PatientController {
   constructor(private readonly patientService: PatientService) {}
 
-  @Post()
+  @Post('create')
   @ApiOperation({ summary: 'Crear un nuevo paciente' })
   @ApiResponse({ status: 201, description: 'Paciente creado exitosamente.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos.' })
@@ -28,7 +28,7 @@ export class PatientController {
     return this.patientService.findAll();
   }
 
-  @Get(':id')
+  @Get('get/:id')
   @ApiOperation({ summary: 'Obtener un paciente por ID' })
   @ApiParam({ name: 'id', description: 'ID del paciente' })
   @ApiResponse({ status: 200, description: 'Paciente encontrado.' })
@@ -37,7 +37,7 @@ export class PatientController {
     return this.patientService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch('update/:id')
   @ApiOperation({ summary: 'Actualizar un paciente' })
   @ApiParam({ name: 'id', description: 'ID del paciente' })
   @ApiResponse({ status: 200, description: 'Paciente actualizado exitosamente.' })
@@ -46,7 +46,7 @@ export class PatientController {
     return this.patientService.update(id, updatePatientDto);
   }
 
-  @Patch(':id/deactivate')
+  @Patch('deactivate/:id')
   @ApiOperation({ summary: 'Desactivar un paciente' })
   @ApiParam({ name: 'id', description: 'ID del paciente' })
   @ApiResponse({ status: 200, description: 'Paciente desactivado exitosamente.' })
@@ -55,7 +55,7 @@ export class PatientController {
     return this.patientService.deactivate(id);
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
   @ApiOperation({ summary: 'Eliminar un paciente' })
   @ApiParam({ name: 'id', description: 'ID del paciente' })
   @ApiResponse({ status: 200, description: 'Paciente eliminado exitosamente.' })

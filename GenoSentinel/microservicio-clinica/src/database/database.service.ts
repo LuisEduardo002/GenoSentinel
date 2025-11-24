@@ -28,18 +28,18 @@ export class DatabaseService implements OnModuleInit {
     // Seed tumor types
     const tumorTypeCount = await this.tumorTypeRepository.count();
     if (tumorTypeCount === 0) {
-      console.log('🌱 Seeding tumor types...');
+      console.log('Seeding tumor types...');
       for (const tumorTypeData of tumorTypesSeed) {
         const tumorType = this.tumorTypeRepository.create(tumorTypeData);
         await this.tumorTypeRepository.save(tumorType);
       }
-      console.log('✅ Tumor types seeded successfully');
+      console.log('Tumor types seeded successfully');
     }
 
     // Seed patients
     const patientCount = await this.patientRepository.count();
     if (patientCount === 0) {
-      console.log('🌱 Seeding patients...');
+      console.log('Seeding patients...');
       for (const patientData of patientsSeed) {
         const patient = this.patientRepository.create({
           ...patientData,
@@ -47,13 +47,13 @@ export class DatabaseService implements OnModuleInit {
         });
         await this.patientRepository.save(patient);
       }
-      console.log('✅ Patients seeded successfully');
+      console.log('Patients seeded successfully');
     }
 
     // Seed clinical records
     const clinicalRecordCount = await this.clinicalRecordRepository.count();
     if (clinicalRecordCount === 0) {
-      console.log('🌱 Seeding clinical records...');
+      console.log('Seeding clinical records...');
       const patients = await this.patientRepository.find();
       const tumorTypes = await this.tumorTypeRepository.find();
 
@@ -90,10 +90,10 @@ export class DatabaseService implements OnModuleInit {
           const clinicalRecord = this.clinicalRecordRepository.create(recordData);
           await this.clinicalRecordRepository.save(clinicalRecord);
         }
-        console.log('✅ Clinical records seeded successfully');
+        console.log('Clinical records seeded successfully');
       }
     }
 
-    console.log('🎉 Database seeding completed!');
+    console.log('Database seeding completed!');
   }
 }

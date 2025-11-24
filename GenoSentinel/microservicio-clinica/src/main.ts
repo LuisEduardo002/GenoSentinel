@@ -31,7 +31,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`🏥 Microservicio Clínica ejecutándose en puerto ${port}`);
-  console.log(`📚 Documentación Swagger disponible en: http://localhost:${port}/api/docs`);
+  console.log(`Microservicio Clínica ejecutándose en puerto ${port}`);
+  console.log(`Documentación Swagger disponible en: http://localhost:${port}/api/docs`);
 }
 bootstrap();
