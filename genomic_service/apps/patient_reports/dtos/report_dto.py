@@ -10,7 +10,7 @@ class PatientClinicalDataDTO:
     patient_id: UUID
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    birth_date: Optional[date] = None
+    birth_date: Optional[str] = None
     gender: Optional[str] = None
     status: Optional[str] = None
     integration_status: str = 'pending'

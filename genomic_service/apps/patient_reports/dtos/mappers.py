@@ -80,11 +80,12 @@ class PatientVariantReportMapper:
         
         return PatientClinicalDataDTO(
             patient_id=patient_id,
-            first_name=data.get('first_name'),
-            last_name=data.get('last_name'),
-            birth_date=data.get('birth_date'),
+            first_name=data.get('firstName'),
+            last_name=data.get('lastName'),
+            birth_date=data.get('birthDate'),
             gender=data.get('gender'),
             status=data.get('status'),
             integration_status='success',
             message=None
         )
+    

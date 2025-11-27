@@ -78,9 +78,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
 
-        'NAME': config('DB_NAME', default='genomic_db'),
+        'NAME': config('DB_NAME', default='genomica_db'),
         'USER': config('DB_USER', default='root'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
+        'PASSWORD': config('DB_PASSWORD', default='hola1234'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='3307'),
         'OPTIONS': {
@@ -158,4 +158,22 @@ CORS_ALLOWED_ORIGINS = config(
     'CORS_ORIGINS',
     default='http://localhost:4200,http://localhost:3000',
     cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
+CLINICAL_SERVICE_URL = config(
+    'CLINICAL_SERVICE_URL', 
+    default='http://localhost:3007'
+)
+
+# URL del Microservicio de Autenticación/Gateway (Spring Boot)
+GATEWAY_SERVICE_URL = config(
+    'GATEWAY_SERVICE_URL', 
+    default='http://localhost:8081'
+)
+
+# Timeout para llamadas HTTP entre microservicios (segundos)
+MICROSERVICE_REQUEST_TIMEOUT = config(
+    'MICROSERVICE_REQUEST_TIMEOUT', 
+    default=5, 
+    cast=int
 )

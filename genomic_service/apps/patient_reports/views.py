@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from django.db.models import Count, Avg
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
+from .services import clinical_client
+
+
 from .models import PatientVariantReport
 from apps.variants.models import GeneticVariant
 from .dtos import (
@@ -117,8 +120,13 @@ class PatientVariantReportViewSet(viewsets.ViewSet):
                     status=status.HTTP_404_NOT_FOUND
                 )
             
-            # TODO: Validar que el paciente existe en Microservicio Clínica
-            # clinical_data = self._get_patient_clinical_data(report_dto.patient_id)
+            # Validar que el paciente existe en Microservicio Clínica
+            # (Opcional: descomentar cuando el microservicio esté disponible)
+            # if not clinical_client.validate_patient_exists(str(report_dto.patient_id)):
+            #     return Response(
+            #         {'error': f'Paciente con ID {report_dto.patient_id} no encontrado en sistema clínico'},
+            #         status=status.HTTP_404_NOT_FOUND
+            #     )
             
             # Convertir DTO a Model
             report = PatientVariantReportMapper.to_model(report_dto, variant)
@@ -126,10 +134,8 @@ class PatientVariantReportViewSet(viewsets.ViewSet):
             # Guardar en BD
             report.save()
             
-            # Obtener datos clínicos (placeholder)
-            clinical_data = PatientVariantReportMapper.create_clinical_data_dto(
-                report.patient_id
-            )
+            # Obtener datos clínicos
+            clinical_data = self._get_patient_clinical_data(report.patient_id)
             
             # Convertir Model guardado a DTO completo
             result_dto = PatientVariantReportMapper.to_dto(report, clinical_data)
@@ -312,24 +318,23 @@ class PatientVariantReportViewSet(viewsets.ViewSet):
     def _get_patient_clinical_data(self, patient_id):
         """
         Obtiene información clínica del paciente desde el Microservicio de Clínica
-        TODO: Implementar llamada HTTP real cuando el microservicio esté disponible
         """
-        # Placeholder para la integración futura
-        # try:
-        #     import requests
-        #     from django.conf import settings
-        #     
-        #     clinical_service_url = f"{settings.CLINICAL_SERVICE_URL}/api/patients/{patient_id}"
-        #     headers = {'Authorization': f'Bearer {token}'}
-        #     response = requests.get(clinical_service_url, headers=headers, timeout=5)
-        #     
-        #     if response.status_code == 200:
-        #         data = response.json()
-        #         return PatientVariantReportMapper.create_clinical_data_dto(patient_id, data)
-        # except Exception as e:
-        #     print(f"Error al obtener datos clínicos: {str(e)}")
+        patient_id_str = str(patient_id) 
         
-        return PatientVariantReportMapper.create_clinical_data_dto(patient_id)
+        print(f"Buscando paciente con ID: {patient_id_str} (Tipo: {type(patient_id)})") # Debug
+
+        # Usar la versión string
+        clinical_data = clinical_client.get_patient(patient_id_str)
+        if clinical_data:
+            # Si se obtienen datos, crear DTO con información completa
+            return PatientVariantReportMapper.create_clinical_data_dto(
+                patient_id, 
+                clinical_data
+            )
+        else:
+            print("sexoxsexo")
+            # Si no se pueden obtener datos, retornar placeholder
+            return PatientVariantReportMapper.create_clinical_data_dto(patient_id)
     
     @extend_schema(
         summary="Estadísticas de reportes por paciente",
