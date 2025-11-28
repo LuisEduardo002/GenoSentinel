@@ -1,0 +1,6 @@
+com\genosentinel\microservicioauth\dto\LoginResponse.class
+com\genosentinel\microservicioauth\controller\GatewayController.class
+com\genosentinel\microservicioauth\service\JwtService.class
+com\genosentinel\microservicioauth\MicroservicioAuthApplication.class
+com\genosentinel\microservicioauth\dto\LoginRequest.class
+com\genosentinel\microservicioauth\controller\AuthController.class
