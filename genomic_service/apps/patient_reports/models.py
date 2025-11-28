@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-from apps.variants.models import GeneticVariant
+from apps.variants.models import GeneticVariant # Asumo que GeneticVariant está en apps.variants
 
 class PatientVariantReport(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -23,4 +23,5 @@ class PatientVariantReport(models.Model):
         unique_together = ['patient_id', 'variant', 'detection_date']
     
     def __str__(self):
+        # Se asume que variant.gene.symbol es accesible
         return f"Reporte {self.patient_id} - {self.variant.gene.symbol}"

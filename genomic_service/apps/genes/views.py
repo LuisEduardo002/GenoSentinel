@@ -1,112 +1,140 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Count
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
-from django.core.exceptions import ValidationError as DjangoValidationError
 
-from .models import Gene
-from .dtos import (
-    GeneDTO, GeneCreateDTO, GeneUpdateDTO, GeneListDTO,
-    GeneSearchResultDTO, GeneStatisticsDTO, GeneMapper
-)
+from .services import GeneService
 from .serializers import (
-    GeneSerializer, GeneCreateSerializer, GeneUpdateSerializer, GeneListSerializer
+    GeneSerializer, GeneCreateSerializer, GeneUpdateSerializer, 
+    GeneSearchResultSerializer, GeneStatisticsSerializer
 )
 
+# Inicializar el servicio (inyección de dependencia simple)
+gene_service = GeneService()
 
 @extend_schema_view(
     list=extend_schema(
         summary="Listar todos los genes",
-        description="Obtiene el listado completo de genes de interés oncológico",
-        tags=['Genes']
+        description="Obtiene el listado completo de genes registrados. Si se proporciona un parámetro de búsqueda y no se encuentran resultados, retorna 404.",
+        tags=['Genes'],
+        parameters=[
+            OpenApiParameter(name='search', type=str, description='Búsqueda por símbolo o nombre completo')
+        ],
+        responses={
+            200: GeneSearchResultSerializer,
+            404: {'description': 'No se encontraron genes para la búsqueda especificada'},
+            500: {'description': 'Error interno del servidor'}
+        }
     ),
     create=extend_schema(
         summary="Crear un nuevo gen",
-        description="Registra un nuevo gen de interés oncológico en el catálogo",
-        tags=['Genes']
+        description="Registra un nuevo gen en el sistema",
+        tags=['Genes'],
+        request=GeneCreateSerializer,
+        responses=GeneSerializer
     ),
     retrieve=extend_schema(
         summary="Obtener detalles de un gen",
-        description="Obtiene información detallada de un gen específico por su ID",
-        tags=['Genes']
+        description="Obtiene información detallada de un gen específico por su ID (UUID)",
+        tags=['Genes'],
+        responses={
+            200: GeneSerializer,
+            400: {'description': 'ID inválido - El parámetro no es un UUID válido'},
+            404: {'description': 'Gen no encontrado'},
+            500: {'description': 'Error interno del servidor'}
+        }
     ),
     update=extend_schema(
         summary="Actualizar un gen completamente",
-        description="Actualiza todos los campos de un gen existente",
-        tags=['Genes']
+        description="Actualiza todos los campos de un gen existente. Requiere enviar al menos un campo.",
+        tags=['Genes'],
+        request=GeneUpdateSerializer,
+        responses={
+            200: GeneSerializer,
+            400: {'description': 'ID inválido, datos vacíos, o datos de entrada inválidos'},
+            404: {'description': 'Gen no encontrado'},
+            500: {'description': 'Error interno del servidor'}
+        }
     ),
     partial_update=extend_schema(
         summary="Actualizar un gen parcialmente",
-        description="Actualiza uno o más campos de un gen existente",
-        tags=['Genes']
+        description="Actualiza uno o más campos de un gen existente (PATCH)",
+        tags=['Genes'],
+        request=GeneUpdateSerializer,
+        responses={
+            200: GeneSerializer,
+            400: {'description': 'ID inválido, datos vacíos, o datos de entrada inválidos'},
+            404: {'description': 'Gen no encontrado'},
+            500: {'description': 'Error interno del servidor'}
+        }
     ),
     destroy=extend_schema(
         summary="Eliminar un gen",
-        description="Elimina un gen del catálogo (solo si no tiene variantes asociadas)",
-        tags=['Genes']
+        description="Elimina un gen del sistema de forma permanente",
+        tags=['Genes'],
+        responses={
+            204: {'description': 'Gen eliminado exitosamente (No Content)'},
+            400: {'description': 'ID inválido - El parámetro no es un UUID válido'},
+            404: {'description': 'Gen no encontrado'},
+            500: {'description': 'Error interno del servidor'}
+        }
     )
 )
 class GeneViewSet(viewsets.ViewSet):
     """
-    ViewSet para gestión completa de Genes de Interés Oncológico
-    Usa DTOs para transferencia de datos
+    ViewSet para gestión completa de Genes.
+    Actúa como orquestador entre la capa HTTP y la capa de Servicio.
     """
     
-    def get_serializer_class(self):
-        """Retorna el serializer apropiado según la acción"""
-        if self.action == 'create':
-            return GeneCreateSerializer
-        elif self.action in ['update', 'partial_update']:
-            return GeneUpdateSerializer
-        elif self.action == 'list':
-            return GeneListSerializer
-        return GeneSerializer
-    
     def list(self, request):
-        """Lista todos los genes con conteo de variantes"""
-        # Obtener genes desde la BD
-        genes = Gene.objects.annotate(variants_count=Count('variants')).all()
-        
-        # Filtro por símbolo
-        symbol = request.query_params.get('symbol', None)
-        if symbol:
-            genes = genes.filter(symbol__icontains=symbol)
-        
-        # Convertir Models a DTOs
-        gene_dtos = [
-            GeneMapper.to_list_dto(gene, gene.variants_count) 
-            for gene in genes
-        ]
-        
-        # Serializar DTOs a JSON
-        serializer = GeneListSerializer(gene_dtos, many=True)
-        
-        return Response({
-            'count': len(gene_dtos),
-            'results': serializer.data
-        })
+        """Lista todos los genes con búsqueda opcional"""
+        try:
+            # 1. Obtener parámetros de la request
+            search_query = request.query_params.get('search', None)
+            
+            # 2. Llamar al Service (lógica de negocio)
+            result_dto = gene_service.get_all_genes(search_query)
+            
+            # 3. Verificar si hay resultados
+            if result_dto.count == 0 and search_query:
+                # Si se hizo una búsqueda específica y no se encontraron resultados
+                return Response(
+                    {
+                        'error': f'No se encontraron genes para la búsqueda: "{search_query}"',
+                        'query': search_query,
+                        'count': 0,
+                        'results': []
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # 4. Serializar DTO a JSON (Serializer de Salida)
+            serializer = GeneSearchResultSerializer(result_dto)
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Error al obtener genes: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def create(self, request):
         """Crea un nuevo gen"""
-        # Validar y deserializar JSON a DTO
+        # 1. Validar y deserializar JSON a DTO (Serializer de Entrada)
         serializer = GeneCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
+        # 2. Obtener DTO de entrada
+        create_dto = serializer.save()
+        
         try:
-            # Crear DTO
-            gene_dto = serializer.save()
+            # 3. Llamar al Service (lógica de negocio)
+            result_dto = gene_service.create_gene(create_dto)
             
-            # Convertir DTO a Model
-            gene = GeneMapper.to_model(gene_dto)
-            
-            # Guardar en BD
-            gene.save()
-            
-            # Convertir Model guardado a DTO completo
-            result_dto = GeneMapper.to_dto(gene)
-            
-            # Serializar DTO a JSON
+            # 4. Serializar DTO a JSON (Serializer de Salida)
             result_serializer = GeneSerializer(result_dto)
             
             return Response(
@@ -114,7 +142,7 @@ class GeneViewSet(viewsets.ViewSet):
                 status=status.HTTP_201_CREATED
             )
             
-        except ValueError as e:
+        except IntegrityError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
@@ -128,49 +156,73 @@ class GeneViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         """Obtiene un gen específico por ID"""
         try:
-            gene = Gene.objects.get(pk=pk)
+            # 1. Validar formato UUID
+            try:
+                from uuid import UUID
+                gene_id = UUID(pk)
+            except (ValueError, AttributeError, TypeError):
+                return Response(
+                    {'error': f'ID inválido: "{pk}" no es un UUID válido'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
-            # Convertir Model a DTO
-            gene_dto = GeneMapper.to_dto(gene)
+            # 2. Llamar al Service (lógica de negocio)
+            gene_dto = gene_service.get_gene_by_id(gene_id)
             
-            # Serializar DTO a JSON
+            # 3. Serializar DTO a JSON (Serializer de Salida)
             serializer = GeneSerializer(gene_dto)
             
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
             
-        except Gene.DoesNotExist:
+        except ObjectDoesNotExist as e:
             return Response(
-                {'error': f'Gen con ID {pk} no encontrado'},
+                {'error': str(e)},
                 status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Error al obtener el gen: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
     def update(self, request, pk=None):
-        """Actualiza completamente un gen"""
+        """Actualiza un gen genético"""
         try:
-            gene = Gene.objects.get(pk=pk)
+            # 1. Validar formato UUID
+            try:
+                from uuid import UUID
+                gene_id = UUID(pk)
+            except (ValueError, AttributeError, TypeError):
+                return Response(
+                    {'error': f'ID inválido: "{pk}" no es un UUID válido'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
-            # Validar y deserializar JSON a UpdateDTO
+            # 2. Validar que se envíe al menos un campo para actualizar
+            if not request.data:
+                return Response(
+                    {'error': 'Debe proporcionar al menos un campo para actualizar'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # 3. Validar y deserializar JSON a UpdateDTO (Serializer de Entrada)
             serializer = GeneUpdateSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
-            # Crear UpdateDTO
+            # 4. Obtener DTO de entrada
             update_dto = serializer.save()
             
-            # Actualizar Model desde DTO
-            gene = GeneMapper.update_model_from_dto(gene, update_dto)
-            gene.save()
+            # 5. Llamar al Service (lógica de negocio)
+            result_dto = gene_service.update_gene(gene_id, update_dto)
             
-            # Convertir Model actualizado a DTO
-            result_dto = GeneMapper.to_dto(gene)
-            
-            # Serializar DTO a JSON
+            # 6. Serializar DTO a JSON (Serializer de Salida)
             result_serializer = GeneSerializer(result_dto)
             
-            return Response(result_serializer.data)
+            return Response(result_serializer.data, status=status.HTTP_200_OK)
             
-        except Gene.DoesNotExist:
+        except ObjectDoesNotExist as e:
             return Response(
-                {'error': f'Gen con ID {pk} no encontrado'},
+                {'error': str(e)},
                 status=status.HTTP_404_NOT_FOUND
             )
         except ValueError as e:
@@ -178,112 +230,60 @@ class GeneViewSet(viewsets.ViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        except Exception as e:
+            return Response(
+                {'error': f'Error al actualizar el gen: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def partial_update(self, request, pk=None):
         """Actualiza parcialmente un gen"""
+        # Reutiliza la lógica de update, ya que UpdateSerializer maneja campos opcionales
         return self.update(request, pk)
     
     def destroy(self, request, pk=None):
-        """Elimina un gen si no tiene variantes asociadas"""
+        """Elimina un gen"""
         try:
-            gene = Gene.objects.get(pk=pk)
-            
-            # Validar que no tenga variantes
-            if gene.variants.exists():
+            # 1. Validar formato UUID
+            try:
+                from uuid import UUID
+                gene_id = UUID(pk)
+            except (ValueError, AttributeError, TypeError):
                 return Response(
-                    {
-                        'error': 'No se puede eliminar el gen porque tiene variantes genéticas asociadas',
-                        'variants_count': gene.variants.count()
-                    },
+                    {'error': f'ID inválido: "{pk}" no es un UUID válido'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            gene.delete()
+            # 2. Llamar al Service (lógica de negocio)
+            gene_symbol = gene_service.delete_gene(gene_id)
             
-            return Response(
-                {'message': f'Gen {gene.symbol} eliminado exitosamente'},
-                status=status.HTTP_204_NO_CONTENT
-            )
+            # 3. HTTP 204 No Content (eliminación exitosa)
+            return Response(status=status.HTTP_204_NO_CONTENT)
             
-        except Gene.DoesNotExist:
+        except ObjectDoesNotExist as e:
             return Response(
-                {'error': f'Gen con ID {pk} no encontrado'},
+                {'error': str(e)},
                 status=status.HTTP_404_NOT_FOUND
             )
-    
-    @extend_schema(
-        summary="Buscar genes por símbolo",
-        description="Busca genes cuyo símbolo contenga el texto especificado",
-        parameters=[
-            OpenApiParameter(
-                name='q',
-                description='Término de búsqueda',
-                required=True,
-                type=str
-            )
-        ],
-        tags=['Genes']
-    )
-    @action(detail=False, methods=['get'])
-    def search(self, request):
-        """Busca genes por símbolo"""
-        query = request.query_params.get('q', '')
-        
-        if not query:
+        except Exception as e:
             return Response(
-                {'error': 'Parámetro "q" es requerido para la búsqueda'},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': f'Error al eliminar el gen: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-        # Buscar en BD
-        genes = Gene.objects.filter(symbol__icontains=query).annotate(
-            variants_count=Count('variants')
-        )
-        
-        # Convertir a DTOs
-        gene_dtos = [
-            GeneMapper.to_list_dto(gene, gene.variants_count) 
-            for gene in genes
-        ]
-        
-        # Crear DTO de resultado
-        search_result = GeneSearchResultDTO(
-            query=query,
-            count=len(gene_dtos),
-            results=gene_dtos
-        )
-        
-        # Serializar
-        serializer = GeneListSerializer(search_result.results, many=True)
-        
-        return Response({
-            'query': search_result.query,
-            'count': search_result.count,
-            'results': serializer.data
-        })
-    
     @extend_schema(
-        summary="Obtener estadísticas de genes",
-        description="Obtiene estadísticas generales del catálogo de genes",
+        summary="Estadísticas de genes",
+        description="Obtiene estadísticas generales de los genes",
+        responses=GeneStatisticsSerializer,
         tags=['Genes']
     )
     @action(detail=False, methods=['get'])
     def statistics(self, request):
-        """Obtiene estadísticas del catálogo de genes"""
-        total_genes = Gene.objects.count()
-        genes_with_variants = Gene.objects.annotate(
-            variant_count=Count('variants')
-        ).filter(variant_count__gt=0).count()
+        """Obtiene estadísticas de genes"""
+        # 1. Llamar al Service (lógica de negocio)
+        stats_dto = gene_service.get_statistics()
         
-        # Crear DTO de estadísticas
-        stats_dto = GeneStatisticsDTO(
-            total_genes=total_genes,
-            genes_with_variants=genes_with_variants,
-            genes_without_variants=total_genes - genes_with_variants
-        )
+        # 2. Serializar DTO a JSON (Serializer de Salida)
+        serializer = GeneStatisticsSerializer(stats_dto)
         
-        return Response({
-            'total_genes': stats_dto.total_genes,
-            'genes_with_variants': stats_dto.genes_with_variants,
-            'genes_without_variants': stats_dto.genes_without_variants
-        })
+        return Response(serializer.data)

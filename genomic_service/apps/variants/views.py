@@ -1,131 +1,168 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Count
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
-from .models import GeneticVariant
-from apps.genes.models import Gene
-from .dtos import (
-    GeneticVariantDTO, GeneticVariantCreateDTO, GeneticVariantUpdateDTO,
-    GeneticVariantListDTO, VariantsByGeneDTO, VariantsByChromosomeDTO,
-    VariantStatisticsDTO, GeneticVariantMapper
-)
+from .services import GeneticVariantService
 from .serializers import (
     GeneticVariantSerializer, GeneticVariantCreateSerializer,
-    GeneticVariantUpdateSerializer, GeneticVariantListSerializer
+    GeneticVariantUpdateSerializer, GeneticVariantListSerializer,
+    VariantsByGeneResultSerializer, VariantsByChromosomeResultSerializer,
+    VariantStatisticsResultSerializer
 )
 
+# Inicializar el servicio (inyección de dependencia simple)
+variant_service = GeneticVariantService()
 
 @extend_schema_view(
     list=extend_schema(
         summary="Listar todas las variantes genéticas",
-        description="Obtiene el listado completo de variantes genéticas registradas",
-        tags=['Variantes Genéticas']
+        description="Obtiene el listado completo de variantes genéticas registradas. Soporta filtros por gen, cromosoma e impacto. Si se aplican filtros y no hay resultados, retorna 404.",
+        tags=['Variantes Genéticas'],
+        parameters=[
+            OpenApiParameter(name='gene_id', type=str, description='Filtrar por ID de gen (UUID)'),
+            OpenApiParameter(name='chromosome', type=str, description='Filtrar por cromosoma (ej: chr17)'),
+            OpenApiParameter(name='impact', type=str, description='Filtrar por impacto (ej: HIGH, MODERATE, LOW)')
+        ],
+        responses={
+            200: GeneticVariantListSerializer(many=True),
+            400: {'description': 'gene_id inválido - No es un UUID válido'},
+            404: {'description': 'No se encontraron variantes con los filtros aplicados'},
+            500: {'description': 'Error interno del servidor'}
+        }
     ),
     create=extend_schema(
         summary="Crear una nueva variante genética",
         description="Registra una nueva variante genética (mutación) en el sistema",
-        tags=['Variantes Genéticas']
+        tags=['Variantes Genéticas'],
+        request=GeneticVariantCreateSerializer,
+        responses=GeneticVariantSerializer
     ),
     retrieve=extend_schema(
         summary="Obtener detalles de una variante",
-        description="Obtiene información detallada de una variante genética específica",
-        tags=['Variantes Genéticas']
+        description="Obtiene información detallada de una variante genética específica por su ID (UUID)",
+        tags=['Variantes Genéticas'],
+        responses={
+            200: GeneticVariantSerializer,
+            400: {'description': 'ID inválido - El parámetro no es un UUID válido'},
+            404: {'description': 'Variante no encontrada'},
+            500: {'description': 'Error interno del servidor'}
+        }
     ),
     update=extend_schema(
         summary="Actualizar una variante completamente",
-        description="Actualiza todos los campos de una variante existente",
-        tags=['Variantes Genéticas']
+        description="Actualiza todos los campos de una variante existente. Requiere enviar al menos un campo.",
+        tags=['Variantes Genéticas'],
+        request=GeneticVariantUpdateSerializer,
+        responses={
+            200: GeneticVariantSerializer,
+            400: {'description': 'ID inválido, datos vacíos, o datos de entrada inválidos'},
+            404: {'description': 'Variante no encontrada'},
+            500: {'description': 'Error interno del servidor'}
+        }
     ),
     partial_update=extend_schema(
         summary="Actualizar una variante parcialmente",
-        description="Actualiza uno o más campos de una variante existente",
-        tags=['Variantes Genéticas']
+        description="Actualiza uno o más campos de una variante existente (PATCH)",
+        tags=['Variantes Genéticas'],
+        request=GeneticVariantUpdateSerializer,
+        responses={
+            200: GeneticVariantSerializer,
+            400: {'description': 'ID inválido, datos vacíos, o datos de entrada inválidos'},
+            404: {'description': 'Variante no encontrada'},
+            500: {'description': 'Error interno del servidor'}
+        }
     ),
     destroy=extend_schema(
         summary="Eliminar una variante",
-        description="Elimina una variante genética del sistema",
-        tags=['Variantes Genéticas']
+        description="Elimina una variante genética del sistema de forma permanente",
+        tags=['Variantes Genéticas'],
+        responses={
+            204: {'description': 'Variante eliminada exitosamente (No Content)'},
+            400: {'description': 'ID inválido - El parámetro no es un UUID válido'},
+            404: {'description': 'Variante no encontrada'},
+            500: {'description': 'Error interno del servidor'}
+        }
     )
 )
 class GeneticVariantViewSet(viewsets.ViewSet):
     """
-    ViewSet para gestión completa de Variantes Genéticas
-    Usa DTOs para transferencia de datos
+    ViewSet para gestión completa de Variantes Genéticas.
+    Actúa como orquestador entre la capa HTTP y la capa de Servicio.
     """
-    
-    def get_serializer_class(self):
-        """Retorna el serializer apropiado según la acción"""
-        if self.action == 'create':
-            return GeneticVariantCreateSerializer
-        elif self.action in ['update', 'partial_update']:
-            return GeneticVariantUpdateSerializer
-        elif self.action == 'list':
-            return GeneticVariantListSerializer
-        return GeneticVariantSerializer
     
     def list(self, request):
         """Lista todas las variantes con filtros opcionales"""
-        # Obtener variantes desde BD
-        variants = GeneticVariant.objects.select_related('gene').all()
-        
-        # Aplicar filtros
-        gene_id = request.query_params.get('gene_id', None)
-        if gene_id:
-            variants = variants.filter(gene_id=gene_id)
-        
-        chromosome = request.query_params.get('chromosome', None)
-        if chromosome:
-            variants = variants.filter(chromosome=chromosome)
-        
-        impact = request.query_params.get('impact', None)
-        if impact:
-            variants = variants.filter(impact=impact)
-        
-        # Convertir Models a DTOs
-        variant_dtos = [
-            GeneticVariantMapper.to_list_dto(variant) 
-            for variant in variants
-        ]
-        
-        # Serializar DTOs a JSON
-        serializer = GeneticVariantListSerializer(variant_dtos, many=True)
-        
-        return Response({
-            'count': len(variant_dtos),
-            'results': serializer.data
-        })
-    
-    def create(self, request):
-        """Crea una nueva variante genética"""
-        # Validar y deserializar JSON a DTO
-        serializer = GeneticVariantCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
         try:
-            # Crear DTO
-            variant_dto = serializer.save()
+            # 1. Obtener parámetros de la request
+            gene_id = request.query_params.get('gene_id', None)
+            chromosome = request.query_params.get('chromosome', None)
+            impact = request.query_params.get('impact', None)
             
-            # Validar que el gen existe
-            try:
-                gene = Gene.objects.get(pk=variant_dto.gene_id)
-            except Gene.DoesNotExist:
+            # 2. Validar gene_id si se proporciona (debe ser UUID)
+            if gene_id:
+                try:
+                    from uuid import UUID
+                    gene_id = str(UUID(gene_id))  # Valida y convierte a string
+                except (ValueError, AttributeError, TypeError):
+                    return Response(
+                        {'error': f'gene_id inválido: "{gene_id}" no es un UUID válido'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            # 3. Llamar al Service (lógica de negocio)
+            variant_dtos = variant_service.get_all_variants(gene_id, chromosome, impact)
+            
+            # 4. Verificar si hay resultados cuando se usan filtros
+            has_filters = gene_id or chromosome or impact
+            if len(variant_dtos) == 0 and has_filters:
+                filters_applied = []
+                if gene_id:
+                    filters_applied.append(f'gene_id={gene_id}')
+                if chromosome:
+                    filters_applied.append(f'chromosome={chromosome}')
+                if impact:
+                    filters_applied.append(f'impact={impact}')
+                
                 return Response(
-                    {'error': f'Gen con ID {variant_dto.gene_id} no encontrado'},
+                    {
+                        'error': f'No se encontraron variantes con los filtros aplicados: {", ".join(filters_applied)}',
+                        'count': 0,
+                        'results': []
+                    },
                     status=status.HTTP_404_NOT_FOUND
                 )
             
-            # Convertir DTO a Model
-            variant = GeneticVariantMapper.to_model(variant_dto, gene)
+            # 5. Serializar DTOs a JSON (Serializer de Salida)
+            serializer = GeneticVariantListSerializer(variant_dtos, many=True)
             
-            # Guardar en BD
-            variant.save()
+            return Response({
+                'count': len(variant_dtos),
+                'results': serializer.data
+            }, status=status.HTTP_200_OK)
             
-            # Convertir Model guardado a DTO completo
-            result_dto = GeneticVariantMapper.to_dto(variant)
+        except Exception as e:
+            return Response(
+                {'error': f'Error al obtener variantes: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def create(self, request):
+        """Crea una nueva variante genética"""
+        # 1. Validar y deserializar JSON a DTO (Serializer de Entrada)
+        serializer = GeneticVariantCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # 2. Obtener DTO de entrada
+        create_dto = serializer.save()
+        
+        try:
+            # 3. Llamar al Service (lógica de negocio)
+            result_dto = variant_service.create_variant(create_dto)
             
-            # Serializar DTO a JSON
+            # 4. Serializar DTO a JSON (Serializer de Salida)
             result_serializer = GeneticVariantSerializer(result_dto)
             
             return Response(
@@ -133,7 +170,12 @@ class GeneticVariantViewSet(viewsets.ViewSet):
                 status=status.HTTP_201_CREATED
             )
             
-        except ValueError as e:
+        except ObjectDoesNotExist as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except IntegrityError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
@@ -147,49 +189,73 @@ class GeneticVariantViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         """Obtiene una variante específica por ID"""
         try:
-            variant = GeneticVariant.objects.select_related('gene').get(pk=pk)
+            # 1. Validar formato UUID
+            try:
+                from uuid import UUID
+                variant_id = UUID(pk)
+            except (ValueError, AttributeError, TypeError):
+                return Response(
+                    {'error': f'ID inválido: "{pk}" no es un UUID válido'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
-            # Convertir Model a DTO
-            variant_dto = GeneticVariantMapper.to_dto(variant)
+            # 2. Llamar al Service (lógica de negocio)
+            variant_dto = variant_service.get_variant_by_id(variant_id)
             
-            # Serializar DTO a JSON
+            # 3. Serializar DTO a JSON (Serializer de Salida)
             serializer = GeneticVariantSerializer(variant_dto)
             
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
             
-        except GeneticVariant.DoesNotExist:
+        except ObjectDoesNotExist as e:
             return Response(
-                {'error': f'Variante con ID {pk} no encontrada'},
+                {'error': str(e)},
                 status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Error al obtener la variante: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
     def update(self, request, pk=None):
         """Actualiza una variante genética"""
         try:
-            variant = GeneticVariant.objects.select_related('gene').get(pk=pk)
+            # 1. Validar formato UUID
+            try:
+                from uuid import UUID
+                variant_id = UUID(pk)
+            except (ValueError, AttributeError, TypeError):
+                return Response(
+                    {'error': f'ID inválido: "{pk}" no es un UUID válido'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
-            # Validar y deserializar JSON a UpdateDTO
+            # 2. Validar que se envíe al menos un campo para actualizar
+            if not request.data:
+                return Response(
+                    {'error': 'Debe proporcionar al menos un campo para actualizar'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # 3. Validar y deserializar JSON a UpdateDTO (Serializer de Entrada)
             serializer = GeneticVariantUpdateSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
-            # Crear UpdateDTO
+            # 4. Obtener DTO de entrada
             update_dto = serializer.save()
             
-            # Actualizar Model desde DTO
-            variant = GeneticVariantMapper.update_model_from_dto(variant, update_dto)
-            variant.save()
+            # 5. Llamar al Service (lógica de negocio)
+            result_dto = variant_service.update_variant(variant_id, update_dto)
             
-            # Convertir Model actualizado a DTO
-            result_dto = GeneticVariantMapper.to_dto(variant)
-            
-            # Serializar DTO a JSON
+            # 6. Serializar DTO a JSON (Serializer de Salida)
             result_serializer = GeneticVariantSerializer(result_dto)
             
-            return Response(result_serializer.data)
+            return Response(result_serializer.data, status=status.HTTP_200_OK)
             
-        except GeneticVariant.DoesNotExist:
+        except ObjectDoesNotExist as e:
             return Response(
-                {'error': f'Variante con ID {pk} no encontrada'},
+                {'error': str(e)},
                 status=status.HTTP_404_NOT_FOUND
             )
         except ValueError as e:
@@ -197,28 +263,47 @@ class GeneticVariantViewSet(viewsets.ViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        except Exception as e:
+            return Response(
+                {'error': f'Error al actualizar la variante: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def partial_update(self, request, pk=None):
         """Actualiza parcialmente una variante"""
+        # Reutiliza la lógica de update, ya que UpdateSerializer maneja campos opcionales
         return self.update(request, pk)
     
     def destroy(self, request, pk=None):
-        """Elimina una variante genética"""
+        """Elimina una variante"""
         try:
-            variant = GeneticVariant.objects.get(pk=pk)
-            gene_symbol = variant.gene.symbol
-            variant.delete()
+            # 1. Validar formato UUID
+            try:
+                from uuid import UUID
+                variant_id = UUID(pk)
+            except (ValueError, AttributeError, TypeError):
+                return Response(
+                    {'error': f'ID inválido: "{pk}" no es un UUID válido'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
-            return Response(
-                {'message': f'Variante del gen {gene_symbol} eliminada exitosamente'},
-                status=status.HTTP_204_NO_CONTENT
-            )
+            # 2. Llamar al Service (lógica de negocio)
+            variant_service.delete_variant(variant_id)
             
-        except GeneticVariant.DoesNotExist:
+            # 3. HTTP 204 No Content (eliminación exitosa)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+            
+        except ObjectDoesNotExist as e:
             return Response(
-                {'error': f'Variante con ID {pk} no encontrada'},
+                {'error': str(e)},
                 status=status.HTTP_404_NOT_FOUND
             )
+        except Exception as e:
+            return Response(
+                {'error': f'Error al eliminar la variante: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     
     @extend_schema(
         summary="Obtener variantes por gen",
@@ -231,53 +316,44 @@ class GeneticVariantViewSet(viewsets.ViewSet):
                 type=str
             )
         ],
+        responses={
+            200: VariantsByGeneResultSerializer,
+            400: {'description': 'Parámetro "gene_symbol" requerido'},
+            404: {'description': 'Gen no encontrado o sin variantes'},
+            500: {'description': 'Error interno del servidor'}
+        },
         tags=['Variantes Genéticas']
     )
     @action(detail=False, methods=['get'])
     def by_gene(self, request):
         """Obtiene variantes de un gen específico por símbolo"""
-        gene_symbol = request.query_params.get('gene_symbol', '')
-        
-        if not gene_symbol:
-            return Response(
-                {'error': 'Parámetro "gene_symbol" es requerido'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
         try:
-            gene = Gene.objects.get(symbol=gene_symbol.upper())
-        except Gene.DoesNotExist:
+            gene_symbol = request.query_params.get('gene_symbol', '')
+            
+            if not gene_symbol:
+                return Response(
+                    {'error': 'Parámetro "gene_symbol" es requerido'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # 1. Llamar al Service (lógica de negocio)
+            result_dto = variant_service.get_variants_by_gene_symbol(gene_symbol)
+            
+            # 2. Serializar DTO a JSON (Serializer de Salida)
+            serializer = VariantsByGeneResultSerializer(result_dto)
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except ObjectDoesNotExist as e:
             return Response(
-                {'error': f'No se encontró el gen con símbolo {gene_symbol}'},
+                {'error': str(e)},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
-        # Obtener variantes del gen
-        variants = GeneticVariant.objects.filter(gene=gene).select_related('gene')
-        
-        # Convertir a DTOs
-        variant_dtos = [
-            GeneticVariantMapper.to_list_dto(variant) 
-            for variant in variants
-        ]
-        
-        # Crear DTO de resultado
-        result_dto = VariantsByGeneDTO(
-            gene_symbol=gene.symbol,
-            gene_name=gene.full_name,
-            total_variants=len(variant_dtos),
-            variants=variant_dtos
-        )
-        
-        # Serializar
-        serializer = GeneticVariantListSerializer(result_dto.variants, many=True)
-        
-        return Response({
-            'gene_symbol': result_dto.gene_symbol,
-            'gene_name': result_dto.gene_name,
-            'total_variants': result_dto.total_variants,
-            'variants': serializer.data
-        })
+        except Exception as e:
+            return Response(
+                {'error': f'Error al obtener variantes por gen: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @extend_schema(
         summary="Obtener variantes por cromosoma",
@@ -290,77 +366,74 @@ class GeneticVariantViewSet(viewsets.ViewSet):
                 type=str
             )
         ],
+        responses={
+            200: VariantsByChromosomeResultSerializer,
+            400: {'description': 'Parámetro "chr" requerido o inválido'},
+            404: {'description': 'No se encontraron variantes para el cromosoma especificado'},
+            500: {'description': 'Error interno del servidor'}
+        },
         tags=['Variantes Genéticas']
     )
     @action(detail=False, methods=['get'])
     def by_chromosome(self, request):
         """Obtiene variantes por cromosoma"""
-        chromosome = request.query_params.get('chr', '')
-        
-        if not chromosome:
+        try:
+            chromosome = request.query_params.get('chr', '')
+            
+            if not chromosome:
+                return Response(
+                    {'error': 'Parámetro "chr" es requerido'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # 1. Llamar al Service (lógica de negocio)
+            result_dto = variant_service.get_variants_by_chromosome(chromosome)
+            
+            # 2. Serializar DTO a JSON (Serializer de Salida)
+            serializer = VariantsByChromosomeResultSerializer(result_dto)
+            
+            if not result_dto.variants:
+                return Response(
+                    {
+                        'error': f'No se encontraron variantes para el cromosoma {chromosome}',
+                        'chromosome': chromosome,
+                        'count': 0,
+                        'variants': []
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
             return Response(
-                {'error': 'Parámetro "chr" es requerido'},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': f'Error al obtener variantes por cromosoma: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-        # Obtener variantes del cromosoma
-        variants = GeneticVariant.objects.filter(
-            chromosome=chromosome
-        ).select_related('gene')
-        
-        # Convertir a DTOs
-        variant_dtos = [
-            GeneticVariantMapper.to_list_dto(variant) 
-            for variant in variants
-        ]
-        
-        # Crear DTO de resultado
-        result_dto = VariantsByChromosomeDTO(
-            chromosome=chromosome,
-            total_variants=len(variant_dtos),
-            variants=variant_dtos
-        )
-        
-        # Serializar
-        serializer = GeneticVariantListSerializer(result_dto.variants, many=True)
-        
-        return Response({
-            'chromosome': result_dto.chromosome,
-            'total_variants': result_dto.total_variants,
-            'variants': serializer.data
-        })
     
     @extend_schema(
         summary="Estadísticas de variantes",
         description="Obtiene estadísticas generales de las variantes genéticas",
+        responses={
+            200: VariantStatisticsResultSerializer,
+            500: {'description': 'Error interno del servidor'}
+        },
         tags=['Variantes Genéticas']
     )
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         """Obtiene estadísticas de variantes"""
-        total_variants = GeneticVariant.objects.count()
-        
-        # Contar por impacto
-        impact_stats = list(
-            GeneticVariant.objects.values('impact').annotate(count=Count('id'))
-        )
-        
-        # Contar por cromosoma (top 5)
-        chromosome_stats = list(
-            GeneticVariant.objects.values('chromosome').annotate(
-                count=Count('id')
-            ).order_by('-count')[:5]
-        )
-        
-        # Crear DTO de estadísticas
-        stats_dto = VariantStatisticsDTO(
-            total_variants=total_variants,
-            by_impact=impact_stats,
-            top_chromosomes=chromosome_stats
-        )
-        
-        return Response({
-            'total_variants': stats_dto.total_variants,
-            'by_impact': stats_dto.by_impact,
-            'top_chromosomes': stats_dto.top_chromosomes
-        })
+        try:
+            # 1. Llamar al Service (lógica de negocio)
+            stats_dto = variant_service.get_statistics()
+            
+            # 2. Serializar DTO a JSON (Serializer de Salida)
+            serializer = VariantStatisticsResultSerializer(stats_dto)
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Error al obtener estadísticas de variantes: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

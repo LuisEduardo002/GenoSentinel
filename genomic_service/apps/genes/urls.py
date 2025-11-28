@@ -3,6 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import GeneViewSet
 
 router = DefaultRouter()
-router.register(r'', GeneViewSet, basename='gene')
+router.register(r'genes', GeneViewSet, basename='gene')
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('', include(router.urls)),
+]
