@@ -2,23 +2,22 @@ import os
 from decouple import config
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+
+
 SECRET_KEY = 'django-insecure-bx8s!dnt!)&7h%%_!j=g@ftw_s(oa@p(jb$+0%4+3%o%o3vmk5'
 
-# SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
 
-# Application definition
+# Aplicaciones instaladas
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -69,8 +68,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'genomic_service.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
 
 DATABASES = {
 
@@ -91,8 +89,6 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -110,8 +106,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'es-co'
 
@@ -122,13 +116,11 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
 
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -165,13 +157,13 @@ CLINICAL_SERVICE_URL = config(
     default='http://localhost:3007'
 )
 
-# URL del Microservicio de Autenticación/Gateway (Spring Boot)
+# URL del Microservicio de Autenticacion
 GATEWAY_SERVICE_URL = config(
     'GATEWAY_SERVICE_URL', 
     default='http://localhost:8081'
 )
 
-# Timeout para llamadas HTTP entre microservicios (segundos)
+# Timeout para llamadas HTTP entre microservicios
 MICROSERVICE_REQUEST_TIMEOUT = config(
     'MICROSERVICE_REQUEST_TIMEOUT', 
     default=5, 
