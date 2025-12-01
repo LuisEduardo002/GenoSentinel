@@ -47,14 +47,12 @@ spec:
           ports:
             - containerPort: 8000
           livenessProbe:
-            httpGet:
-              path: /api/docs/
+            tcpSocket:
               port: 8000
             initialDelaySeconds: 40
             periodSeconds: 15
           readinessProbe:
-            httpGet:
-              path: /api/docs/
+            tcpSocket:
               port: 8000
             initialDelaySeconds: 20
             periodSeconds: 10

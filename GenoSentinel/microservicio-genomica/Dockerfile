@@ -21,6 +21,5 @@ COPY . .
 # Exponer el puerto donde corre Django
 EXPOSE 8000
 
-# Comando por defecto: correr el servidor de desarrollo
-# (para producción se podría cambiar a gunicorn, pero para el proyecto es suficiente)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Comando por defecto: correr la aplicación con gunicorn (más apropiado para Kubernetes)
+CMD ["gunicorn", "genomic_service.wsgi:application", "--bind", "0.0.0.0:8000"]

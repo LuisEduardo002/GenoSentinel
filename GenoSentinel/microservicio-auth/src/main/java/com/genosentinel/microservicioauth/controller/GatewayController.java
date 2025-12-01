@@ -36,15 +36,12 @@ public class GatewayController
     }
 
     @GetMapping("/health")
-    public ResponseEntity<?> health(@RequestHeader(value = "Authorization", required = false) String authorization) 
+    public ResponseEntity<?> health() 
     {
-        if (!isAuthorized(authorization))
-        {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Token no proporcionado o inválido");
-
-        }
-        return ResponseEntity.ok("Gateway OK - acceso autorizado");
+        Map<String, String> body = new HashMap<>();
+        body.put("status", "OK");
+        body.put("service", "gateway-auth");
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/patients/{patientId}/summary")

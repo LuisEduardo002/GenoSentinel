@@ -16,8 +16,7 @@ SECRET_KEY = 'django-insecure-bx8s!dnt!)&7h%%_!j=g@ftw_s(oa@p(jb$+0%4+3%o%o3vmk5
 DEBUG = True
 
 # En este proyecto permitimos cualquier host (incluidas IPs internas del clúster)
-ALLOWED_HOSTS = ["*"]
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
