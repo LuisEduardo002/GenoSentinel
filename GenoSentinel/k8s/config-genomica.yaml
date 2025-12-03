@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: genomica-config
+  namespace: genosentinel
+data:
+  DJANGO_PORT: "8000"
+  DB_NAME: "genosentinel_genomica"
+  DB_USER: "root"
+  DB_HOST: "mysql.genosentinel.svc.cluster.local"
+  DB_PORT: "3306"
+  CLINICAL_SERVICE_URL: "http://microservicio-clinica:3001"
+  CLINICA_BASE_URL: "http://microservicio-clinica:3001"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: genomica-secrets
+  namespace: genosentinel
+stringData:
+  DB_PASSWORD: "1234"

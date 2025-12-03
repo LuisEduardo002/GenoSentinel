@@ -9,7 +9,7 @@ import { UpdateClinicalRecordDto } from '../dto/update-clinical-record.dto';
 export class ClinicalRecordController {
   constructor(private readonly clinicalRecordService: ClinicalRecordService) {}
 
-  @Post()
+  @Post('create')
   @ApiOperation({ summary: 'Crear una nueva historia clínica' })
   @ApiResponse({ status: 201, description: 'Historia clínica creada exitosamente.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos.' })
@@ -32,7 +32,7 @@ export class ClinicalRecordController {
     return this.clinicalRecordService.findAll();
   }
 
-  @Get(':id')
+  @Get('get/:id')
   @ApiOperation({ summary: 'Obtener una historia clínica por ID' })
   @ApiParam({ name: 'id', description: 'ID de la historia clínica' })
   @ApiResponse({ status: 200, description: 'Historia clínica encontrada.' })
@@ -41,7 +41,7 @@ export class ClinicalRecordController {
     return this.clinicalRecordService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch('update/:id')
   @ApiOperation({ summary: 'Actualizar una historia clínica' })
   @ApiParam({ name: 'id', description: 'ID de la historia clínica' })
   @ApiResponse({ status: 200, description: 'Historia clínica actualizada exitosamente.' })
@@ -50,7 +50,7 @@ export class ClinicalRecordController {
     return this.clinicalRecordService.update(id, updateClinicalRecordDto);
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
   @ApiOperation({ summary: 'Eliminar una historia clínica' })
   @ApiParam({ name: 'id', description: 'ID de la historia clínica' })
   @ApiResponse({ status: 200, description: 'Historia clínica eliminada exitosamente.' })

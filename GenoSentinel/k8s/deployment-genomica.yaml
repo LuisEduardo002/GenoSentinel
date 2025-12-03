@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservicio-genomica
+  namespace: genosentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservicio-genomica
+  template:
+    metadata:
+      labels:
+        app: microservicio-genomica
+    spec:
+      containers:
+        - name: microservicio-genomica
+          # Ajusta esta imagen al nombre que construyas y publiques en tu registry
+          image: genosentinel/microservicio-genomica:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: genomica-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: genomica-config
+                  key: DB_USER
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: genomica-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: genomica-config
+                  key: DB_PORT
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: genomica-secrets
+                  key: DB_PASSWORD
+          ports:
+            - containerPort: 8000
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 40
+            periodSeconds: 15
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10

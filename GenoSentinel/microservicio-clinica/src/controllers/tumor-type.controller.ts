@@ -9,7 +9,7 @@ import { UpdateTumorTypeDto } from '../dto/update-tumor-type.dto';
 export class TumorTypeController {
   constructor(private readonly tumorTypeService: TumorTypeService) {}
 
-  @Post()
+  @Post('create')
   @ApiOperation({ summary: 'Crear un nuevo tipo de tumor' })
   @ApiResponse({ status: 201, description: 'Tipo de tumor creado exitosamente.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos.' })
@@ -28,7 +28,7 @@ export class TumorTypeController {
     return this.tumorTypeService.findAll();
   }
 
-  @Get(':id')
+  @Get('get/:id')
   @ApiOperation({ summary: 'Obtener un tipo de tumor por ID' })
   @ApiParam({ name: 'id', description: 'ID del tipo de tumor' })
   @ApiResponse({ status: 200, description: 'Tipo de tumor encontrado.' })
@@ -37,7 +37,7 @@ export class TumorTypeController {
     return this.tumorTypeService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Patch('update/:id')
   @ApiOperation({ summary: 'Actualizar un tipo de tumor' })
   @ApiParam({ name: 'id', description: 'ID del tipo de tumor' })
   @ApiResponse({ status: 200, description: 'Tipo de tumor actualizado exitosamente.' })
@@ -46,7 +46,7 @@ export class TumorTypeController {
     return this.tumorTypeService.update(+id, updateTumorTypeDto);
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
   @ApiOperation({ summary: 'Eliminar un tipo de tumor' })
   @ApiParam({ name: 'id', description: 'ID del tipo de tumor' })
   @ApiResponse({ status: 200, description: 'Tipo de tumor eliminado exitosamente.' })
