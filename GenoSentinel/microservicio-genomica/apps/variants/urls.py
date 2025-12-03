@@ -1,22 +1,10 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import GeneticVariantViewSet
 
-from .views import (
-    GeneticVariantCreateView,
-    GeneticVariantRetrieveView,
-    GeneticVariantUpdateView,
-    GeneticVariantDeleteView,
-    GeneticVariantListView,
-)
+router = DefaultRouter()
+router.register(r'', GeneticVariantViewSet, basename='genetic-variant')
 
 urlpatterns = [
-    # Crear variante
-    path('create/', GeneticVariantCreateView.as_view(), name='variant-create'),
-
-    # Obtener, actualizar y eliminar por ID (UUID)
-    path('get/<uuid:pk>/', GeneticVariantRetrieveView.as_view(), name='variant-detail'),
-    path('update/<uuid:pk>/', GeneticVariantUpdateView.as_view(), name='variant-update'),
-    path('delete/<uuid:pk>/', GeneticVariantDeleteView.as_view(), name='variant-delete'),
-
-    # Listar variantes (con filtros opcionales ?gene_id=, ?chromosome=, ?impact=)
-    path('', GeneticVariantListView.as_view(), name='variant-list'),
+    path('', include(router.urls)),
 ]

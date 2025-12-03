@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-from apps.genes.models import Gene
+from apps.genes.models import Gene # Importar el modelo Gene de la app 'genes'
 
 class GeneticVariant(models.Model):
     IMPACT_CHOICES = [
