@@ -1,0 +1,200 @@
+INFORME: EJECUCIÓN DE MICROSERVICIO CLÍNICA CON MYSQL EN DOCKER (SIN DOCKER-COMPOSE)
+
+============================================================
+1. CREACIÓN DE RED DOCKER COMPARTIDA
+============================================================
+
+Se crea una red para permitir la comunicación interna entre contenedores por nombre de host:
+
+    docker network create genosentinel-net
+
+- Nombre de la red: genosentinel-net
+
+
+============================================================
+2. LEVANTAR MYSQL EN CONTENEDOR DOCKER
+============================================================
+
+Se levanta un contenedor MySQL dentro de la red genosentinel-net:
+
+    docker run -d \
+      --name genosentinel-mysql \
+      --network genosentinel-net \
+      -e MYSQL_ROOT_PASSWORD=hola1234 \
+      -e MYSQL_DATABASE=genosentinel_clinica \
+      -e MYSQL_USER=genosentinel \
+      -e MYSQL_PASSWORD=1234 \
+      -p 3307:3306 \
+      mysql:8
+
+Detalles:
+- Contenedor: genosentinel-mysql
+- Base de datos creada: genosentinel_clinica
+- Usuario de aplicación: genosentinel / 1234
+- Puerto expuesto en el host: 3307 -> 3306 (interno del contenedor)
+
+Comandos de verificación:
+
+    docker ps
+    docker logs genosentinel-mysql
+
+En los logs se observa que MySQL está "ready for connections".
+
+
+============================================================
+3. CONFIGURACIÓN DEL MICROSERVICIO CLÍNICA (NESTJS)
+============================================================
+
+En el archivo microservicio-clinica/src/app.module.ts, TypeORM se configura con variables de entorno:
+
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT) || 3306,
+      username: process.env.DB_USERNAME || 'root',
+      password: process.env.DB_PASSWORD || 'password',
+      database: process.env.DB_DATABASE || 'genosentinel_clinica',
+      entities: [Patient, TumorType, ClinicalRecord],
+      synchronize: process.env.NODE_ENV === 'development',
+      logging: process.env.NODE_ENV === 'development',
+    }),
+
+Variables de entorno esperadas por la app:
+- DB_HOST
+- DB_PORT
+- DB_USERNAME
+- DB_PASSWORD
+- DB_DATABASE
+- PORT (puerto de la app, 3001)
+- NODE_ENV
+
+En el entorno de Docker, estas variables se pasan explícitamente en el comando docker run (ver sección 5).
+
+============================================================
+4. CONSTRUCCIÓN DE LA IMAGEN DOCKER DEL MICROSERVICIO CLÍNICA
+============================================================
+
+Desde la raíz del proyecto GenoSentinel se construye la imagen del microservicio Clínica usando su Dockerfile:
+
+    docker build \
+      -t genosentinel/microservicio-clinica:local \
+      -f microservicio-clinica/Dockerfile \
+      microservicio-clinica
+
+Resumen del Dockerfile (microservicio-clinica/Dockerfile):
+- Imagen base: node:18-alpine
+- WORKDIR: /app
+- Instala curl para el HEALTHCHECK
+- Copia package*.json e instala dependencias (npm ci --only=production)
+- Copia el resto del código y ejecuta npm run build
+- EXPOSE 3001
+- HEALTHCHECK: curl -f http://localhost:3001/health
+- CMD: ["npm", "run", "start:prod"]
+
+
+============================================================
+5. EJECUCIÓN DEL MICROSERVICIO CLÍNICA EN CONTENEDOR
+============================================================
+
+Se levanta el contenedor clinica-service en la misma red genosentinel-net, apuntando al contenedor MySQL (genosentinel-mysql):
+
+1) Eliminar contenedor previo (si existiera):
+
+    docker rm -f clinica-service 2>nul   (en PowerShell)
+
+2) Crear y arrancar el contenedor de clínica:
+
+    docker run -d \
+      --name clinica-service \
+      --network genosentinel-net \
+      -p 3001:3001 \
+      -e DB_HOST=genosentinel-mysql \
+      -e DB_PORT=3306 \
+      -e DB_USERNAME=genosentinel \
+      -e DB_PASSWORD=1234 \
+      -e DB_DATABASE=genosentinel_clinica \
+      -e PORT=3001 \
+      -e NODE_ENV=development \
+      genosentinel/microservicio-clinica:local
+
+Explicación de las variables de entorno:
+- DB_HOST=genosentinel-mysql
+  (nombre del contenedor MySQL dentro de la red Docker)
+- DB_PORT=3306
+  (puerto interno del contenedor MySQL)
+- DB_USERNAME=genosentinel
+- DB_PASSWORD=1234
+- DB_DATABASE=genosentinel_clinica
+- PORT=3001 (puerto donde NestJS expone la API)
+- NODE_ENV=development (activa synchronize/logging en TypeORM según app.module.ts)
+
+
+============================================================
+6. VERIFICACIONES Y LOGS
+============================================================
+
+Comando para listar contenedores activos:
+
+    docker ps
+
+Salida esperada (resumen):
+
+    CONTAINER ID   IMAGE                                      COMMAND                  ...   PORTS
+    dcf99f1ba503   genosentinel/microservicio-clinica:local   "docker-entrypoint.s…"  ...   0.0.0.0:3001->3001/tcp   clinica-service
+    0167fc54e7d9   mysql:8                                    "docker-entrypoint.s…"  ...   0.0.0.0:3307->3306/tcp   genosentinel-mysql
+
+Logs del microservicio Clínica:
+
+    docker logs clinica-service
+
+En los logs se observa:
+- Arranque de NestJS y TypeORM.
+- Creación automática de tablas (tumor_types, patients, clinical_records).
+- Seeding de datos de ejemplo (tumores, pacientes, historias clínicas).
+- Mensajes clave:
+
+    Microservicio Clínica ejecutándose en puerto 3001
+    Documentación Swagger disponible en: http://localhost:3001/api/docs
+
+
+============================================================
+7. COMPROBACIONES DESDE EL HOST
+============================================================
+
+Con los contenedores genosentinel-mysql y clinica-service en ejecución, se prueban los endpoints desde el host (máquina local):
+
+1) Healthcheck del microservicio:
+
+    curl http://localhost:3001/health
+
+Respuesta esperada (JSON):
+
+    {"status":"ok","timestamp":"...","service":"microservicio-clinica","version":"1.0.0"}
+
+2) Swagger de Clínica:
+
+    curl http://localhost:3001/api/docs
+
+O abrir en el navegador:
+
+    http://localhost:3001/api/docs
+
+Se muestra la interfaz Swagger UI con los endpoints documentados, incluyendo:
+- /health
+- /patients/... (crear, listar, obtener, actualizar, desactivar, eliminar)
+- /tumor-types/... (CRUD de tipos de tumor)
+- /clinical-records/... (CRUD de historias clínicas)
+
+
+============================================================
+8. RESUMEN
+============================================================
+
+- Se creó una red Docker llamada genosentinel-net.
+- Se levantó un contenedor MySQL (genosentinel-mysql) con la base de datos genosentinel_clinica.
+- Se construyó la imagen del microservicio Clínica (genosentinel/microservicio-clinica:local).
+- Se levantó el contenedor clinica-service en la misma red, configurando las variables de entorno para que TypeORM se conecte a genosentinel-mysql.
+- El microservicio Clínica se ejecuta correctamente en el puerto 3001, exponiendo:
+  - Endpoint de salud: /health
+  - Documentación Swagger: /api/docs
+  - Endpoints de gestión de pacientes, tipos de tumor e historias clínicas, con datos iniciales precargados.

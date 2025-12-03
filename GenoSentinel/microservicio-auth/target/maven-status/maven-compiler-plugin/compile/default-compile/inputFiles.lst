@@ -1,6 +1,17 @@
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\auth\AuthConfig.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\auth\JwtAuthFilter.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\auth\SecurityConfig.java
 C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\controller\AuthController.java
 C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\controller\GatewayController.java
 C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\dto\LoginRequest.java
 C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\dto\LoginResponse.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\dto\PatientCreateRequestDto.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\dto\PatientResponseDto.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\dto\PatientUpdateRequestDto.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\dto\RegisterRequest.java
 C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\MicroservicioAuthApplication.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\models\entities\Role.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\models\entities\Users.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\repository\RoleRepository.java
+C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\repository\UsersRepository.java
 C:\Users\User\OneDrive\Documentos\IngenieriaUAM\Programación Backend\ProyectoFinal\GenoSentinel\microservicio-auth\src\main\java\com\genosentinel\microservicioauth\service\JwtService.java

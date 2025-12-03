@@ -7,8 +7,9 @@ data:
   DJANGO_PORT: "8000"
   DB_NAME: "genosentinel_genomica"
   DB_USER: "root"
-  DB_HOST: "mysql"
+  DB_HOST: "mysql.genosentinel.svc.cluster.local"
   DB_PORT: "3306"
+  CLINICAL_SERVICE_URL: "http://microservicio-clinica:3001"
   CLINICA_BASE_URL: "http://microservicio-clinica:3001"
 ---
 apiVersion: v1

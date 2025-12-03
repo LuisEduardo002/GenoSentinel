@@ -60,4 +60,11 @@ public class JwtService
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    public Claims parse(String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        return getClaims(token);
+    }
 }

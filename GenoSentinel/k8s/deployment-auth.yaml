@@ -25,6 +25,31 @@ spec:
               value: "http://microservicio-genomica:8000"
             - name: JWT_SECRET
               value: "CAMBIA_ESTA_CLAVE_EN_PRODUCCION_1234567890"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-config
+                  key: DB_PORT
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-config
+                  key: DB_USERNAME
+            - name: DB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-config
+                  key: DB_DATABASE
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secrets
+                  key: DB_PASSWORD
           ports:
             - containerPort: 8080
           livenessProbe:

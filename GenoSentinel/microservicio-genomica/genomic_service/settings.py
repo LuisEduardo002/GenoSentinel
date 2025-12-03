@@ -2,23 +2,22 @@ import os
 from decouple import config
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+
+
 SECRET_KEY = 'django-insecure-bx8s!dnt!)&7h%%_!j=g@ftw_s(oa@p(jb$+0%4+3%o%o3vmk5'
 
-# SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = True
 
-# En este proyecto permitimos cualquier host (incluidas IPs internas del clúster)
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
 
-# Application definition
+
+# Aplicaciones instaladas
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -69,8 +68,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'genomic_service.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
 
 DATABASES = {
 
@@ -78,9 +76,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
 
-        'NAME': config('DB_NAME', default='genomic_db'),
+        'NAME': config('DB_NAME', default='genomica_db'),
         'USER': config('DB_USER', default='root'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
+        'PASSWORD': config('DB_PASSWORD', default='hola1234'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='3307'),
         'OPTIONS': {
@@ -91,8 +89,6 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -110,8 +106,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'es-co'
 
@@ -122,13 +116,11 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
 
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -153,12 +145,27 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
 }
 
-# URL base del microservicio de Clínica, usada para enriquecer reportes de pacientes
-CLINICA_BASE_URL = config('CLINICA_BASE_URL', default='http://localhost:3001')
-
 # Configuraciones de CORS 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ORIGINS',
     default='http://localhost:4200,http://localhost:3000',
     cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
+CLINICAL_SERVICE_URL = config(
+    'CLINICAL_SERVICE_URL', 
+    default='http://localhost:3007'
+)
+
+# URL del Microservicio de Autenticacion
+GATEWAY_SERVICE_URL = config(
+    'GATEWAY_SERVICE_URL', 
+    default='http://localhost:8081'
+)
+
+# Timeout para llamadas HTTP entre microservicios
+MICROSERVICE_REQUEST_TIMEOUT = config(
+    'MICROSERVICE_REQUEST_TIMEOUT', 
+    default=5, 
+    cast=int
 )
