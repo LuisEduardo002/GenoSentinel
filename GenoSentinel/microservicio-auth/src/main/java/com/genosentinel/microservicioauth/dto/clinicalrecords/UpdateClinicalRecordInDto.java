@@ -1,9 +1,8 @@
 package com.genosentinel.microservicioauth.dto.clinicalrecords;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-
-import javax.validation.constraints.Size;
 
 /**
  * DTO para actualizar un registro clínico en el microservicio de Clínica

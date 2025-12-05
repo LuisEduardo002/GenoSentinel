@@ -68,26 +68,27 @@ TEMPLATES = [
 WSGI_APPLICATION = 'genomic_service.wsgi.application'
 
 
-
+if DEBUG:
+    db_host = '127.0.0.1'
+    db_port = '3306'
+else:
+    db_host = config('DB_HOST', default='mysql')
+    db_port = config('DB_PORT', default='3306')
 
 DATABASES = {
-
-
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-
         'NAME': config('DB_NAME', default='genomica_db'),
         'USER': config('DB_USER', default='root'),
         'PASSWORD': config('DB_PASSWORD', default='hola1234'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='3307'),
+        'HOST': db_host,
+        'PORT': db_port,
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'charset': 'utf8mb4',
         }
     }
 }
-
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -104,8 +105,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
-
 
 LANGUAGE_CODE = 'es-co'
 

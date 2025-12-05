@@ -21,8 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * Controlador Gateway que actúa como punto de entrada único para todos los
@@ -63,7 +62,7 @@ public class GatewayController {
             @ApiResponse(responseCode = "404", description = "Gen no encontrado"),
             @ApiResponse(responseCode = "503", description = "Servicio de Genómica no disponible")
     })
-    public ResponseEntity<?> getGeneById(@PathVariable String id) {
+    public ResponseEntity<?> getGeneById(@PathVariable("id") String id) {
         return ResponseEntity.ok(geneGatewayService.getGeneById(id));
     }
 
@@ -73,7 +72,7 @@ public class GatewayController {
             @ApiResponse(responseCode = "200", description = "Búsqueda completada"),
             @ApiResponse(responseCode = "503", description = "Servicio de Genómica no disponible")
     })
-    public ResponseEntity<?> searchGenes(@RequestParam String symbol) {
+    public ResponseEntity<?> searchGenes(@RequestParam("symbol") String symbol) {
         return ResponseEntity.ok(geneGatewayService.searchGeneBySymbol(symbol));
     }
 
@@ -99,7 +98,7 @@ public class GatewayController {
             @ApiResponse(responseCode = "503", description = "Servicio de Genómica no disponible")
     })
     public ResponseEntity<?> updateGene(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody UpdateGeneInDto updateDto) {
         return ResponseEntity.ok(geneGatewayService.updateGene(id, updateDto));
     }
@@ -113,7 +112,7 @@ public class GatewayController {
             @ApiResponse(responseCode = "503", description = "Servicio de Genómica no disponible")
     })
     public ResponseEntity<?> patchGene(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody UpdateGeneInDto patchDto) {
         return ResponseEntity.ok(geneGatewayService.patchGene(id, patchDto));
     }
@@ -125,7 +124,7 @@ public class GatewayController {
             @ApiResponse(responseCode = "404", description = "Gen no encontrado"),
             @ApiResponse(responseCode = "503", description = "Servicio de Genómica no disponible")
     })
-    public ResponseEntity<Void> deleteGene(@PathVariable String id) {
+    public ResponseEntity<Void> deleteGene(@PathVariable("id") String id) {
         geneGatewayService.deleteGene(id);
         return ResponseEntity.noContent().build();
     }
@@ -159,7 +158,7 @@ public class GatewayController {
             @ApiResponse(responseCode = "404", description = "Variante no encontrada"),
             @ApiResponse(responseCode = "503", description = "Servicio de Genómica no disponible")
     })
-    public ResponseEntity<?> getVariantById(@PathVariable String id) {
+    public ResponseEntity<?> getVariantById(@PathVariable("id") String id) {
         return ResponseEntity.ok(variantGatewayService.getVariantById(id));
     }
 
@@ -169,7 +168,7 @@ public class GatewayController {
             @ApiResponse(responseCode = "200", description = "Variantes obtenidas"),
             @ApiResponse(responseCode = "503", description = "Servicio de Genómica no disponible")
     })
-    public ResponseEntity<?> getVariantsByGene(@PathVariable String geneSymbol) {
+    public ResponseEntity<?> getVariantsByGene(@PathVariable("geneSymbol") String geneSymbol) {
         return ResponseEntity.ok(variantGatewayService.getVariantsByGene(geneSymbol));
     }
 
@@ -179,7 +178,7 @@ public class GatewayController {
             @ApiResponse(responseCode = "200", description = "Variantes obtenidas"),
             @ApiResponse(responseCode = "503", description = "Servicio de Genómica no disponible")
     })
-    public ResponseEntity<?> getVariantsByChromosome(@PathVariable String chromosome) {
+    public ResponseEntity<?> getVariantsByChromosome(@PathVariable("chromosome") String chromosome) {
         return ResponseEntity.ok(variantGatewayService.getVariantsByChromosome(chromosome));
     }
 
@@ -199,7 +198,7 @@ public class GatewayController {
     @PutMapping("/variants/{id}")
     @Operation(summary = "Actualizar variante (PUT)", description = "Actualiza completamente una variante")
     public ResponseEntity<?> updateVariant(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody UpdateGeneticVariantInDto updateDto) {
         return ResponseEntity.ok(variantGatewayService.updateVariant(id, updateDto));
     }
@@ -207,14 +206,14 @@ public class GatewayController {
     @PatchMapping("/variants/{id}")
     @Operation(summary = "Actualizar variante (PATCH)", description = "Actualiza parcialmente una variante")
     public ResponseEntity<?> patchVariant(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody UpdateGeneticVariantInDto patchDto) {
         return ResponseEntity.ok(variantGatewayService.patchVariant(id, patchDto));
     }
 
     @DeleteMapping("/variants/{id}")
     @Operation(summary = "Eliminar variante", description = "Elimina una variante del sistema")
-    public ResponseEntity<Void> deleteVariant(@PathVariable String id) {
+    public ResponseEntity<Void> deleteVariant(@PathVariable("id") String id) {
         variantGatewayService.deleteVariant(id);
         return ResponseEntity.noContent().build();
     }
@@ -235,25 +234,25 @@ public class GatewayController {
 
     @GetMapping("/patient-reports/{id}")
     @Operation(summary = "Obtener reporte por ID", description = "Obtiene un reporte específico")
-    public ResponseEntity<?> getReportById(@PathVariable String id) {
+    public ResponseEntity<?> getReportById(@PathVariable("id") String id) {
         return ResponseEntity.ok(reportGatewayService.getReportById(id));
     }
 
     @GetMapping("/patient-reports/patient/{patientId}")
     @Operation(summary = "Reportes por paciente", description = "Obtiene todos los reportes de un paciente")
-    public ResponseEntity<?> getReportsByPatient(@PathVariable String patientId) {
+    public ResponseEntity<?> getReportsByPatient(@PathVariable("patientId") String patientId) {
         return ResponseEntity.ok(reportGatewayService.getReportsByPatient(patientId));
     }
 
     @GetMapping("/patient-reports/patient/{patientId}/summary")
     @Operation(summary = "Resumen del paciente", description = "Obtiene el resumen clínico y genómico de un paciente")
-    public ResponseEntity<?> getPatientSummary(@PathVariable String patientId) {
+    public ResponseEntity<?> getPatientSummary(@PathVariable("patientId") String patientId) {
         return ResponseEntity.ok(reportGatewayService.getPatientSummary(patientId));
     }
 
     @GetMapping("/patient-reports/patient/{patientId}/statistics")
     @Operation(summary = "Estadísticas del paciente", description = "Obtiene estadísticas de variantes del paciente")
-    public ResponseEntity<?> getPatientStatistics(@PathVariable String patientId) {
+    public ResponseEntity<?> getPatientStatistics(@PathVariable("patientId") String patientId) {
         return ResponseEntity.ok(reportGatewayService.getPatientStatistics(patientId));
     }
 
@@ -267,7 +266,7 @@ public class GatewayController {
     @PutMapping("/patient-reports/{id}")
     @Operation(summary = "Actualizar reporte (PUT)", description = "Actualiza completamente un reporte")
     public ResponseEntity<?> updateReport(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody UpdatePatientReportInDto updateDto) {
         return ResponseEntity.ok(reportGatewayService.updateReport(id, updateDto));
     }
@@ -275,14 +274,14 @@ public class GatewayController {
     @PatchMapping("/patient-reports/{id}")
     @Operation(summary = "Actualizar reporte (PATCH)", description = "Actualiza parcialmente un reporte")
     public ResponseEntity<?> patchReport(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody UpdatePatientReportInDto patchDto) {
         return ResponseEntity.ok(reportGatewayService.patchReport(id, patchDto));
     }
 
     @DeleteMapping("/patient-reports/{id}")
     @Operation(summary = "Eliminar reporte", description = "Elimina un reporte")
-    public ResponseEntity<Void> deleteReport(@PathVariable String id) {
+    public ResponseEntity<Void> deleteReport(@PathVariable("id") String id) {
         reportGatewayService.deleteReport(id);
         return ResponseEntity.noContent().build();
     }
@@ -303,13 +302,13 @@ public class GatewayController {
 
     @GetMapping("/clinical-records/{id}")
     @Operation(summary = "Obtener registro clínico por ID", description = "Obtiene un registro clínico específico")
-    public ResponseEntity<?> getClinicalRecordById(@PathVariable Long id) {
+    public ResponseEntity<?> getClinicalRecordById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(clinicalRecordGatewayService.getClinicalRecordById(id));
     }
 
     @GetMapping("/clinical-records/patient/{patientId}")
     @Operation(summary = "Registros por paciente", description = "Obtiene todos los registros clínicos de un paciente")
-    public ResponseEntity<?> getClinicalRecordsByPatient(@PathVariable String patientId) {
+    public ResponseEntity<?> getClinicalRecordsByPatient(@PathVariable("patientId") String patientId) {
         return ResponseEntity.ok(clinicalRecordGatewayService.getClinicalRecordsByPatient(patientId));
     }
 
@@ -323,14 +322,14 @@ public class GatewayController {
     @PatchMapping("/clinical-records/{id}")
     @Operation(summary = "Actualizar registro clínico", description = "Actualiza un registro clínico")
     public ResponseEntity<?> updateClinicalRecord(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody UpdateClinicalRecordInDto updateDto) {
         return ResponseEntity.ok(clinicalRecordGatewayService.updateClinicalRecord(id, updateDto));
     }
 
     @DeleteMapping("/clinical-records/{id}")
     @Operation(summary = "Eliminar registro clínico", description = "Elimina un registro clínico")
-    public ResponseEntity<Void> deleteClinicalRecord(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteClinicalRecord(@PathVariable("id") Long id) {
         clinicalRecordGatewayService.deleteClinicalRecord(id);
         return ResponseEntity.noContent().build();
     }
@@ -339,13 +338,13 @@ public class GatewayController {
 
     @GetMapping("/patients")
     @Operation(summary = "Listar pacientes", description = "Obtiene todos los pacientes, opcionalmente filtrados por status")
-    public ResponseEntity<?> getPatients(@RequestParam(required = false) String status) {
+    public ResponseEntity<?> getPatients(@RequestParam(name = "status", required = false) String status) {
         return ResponseEntity.ok(patientGatewayService.getPatients(status));
     }
 
     @GetMapping("/patients/{id}")
     @Operation(summary = "Obtener paciente por ID", description = "Obtiene un paciente específico")
-    public ResponseEntity<?> getPatientById(@PathVariable String id) {
+    public ResponseEntity<?> getPatientById(@PathVariable("id") String id) {
         return ResponseEntity.ok(patientGatewayService.getPatientById(id));
     }
 
@@ -359,20 +358,20 @@ public class GatewayController {
     @PatchMapping("/patients/{id}")
     @Operation(summary = "Actualizar paciente", description = "Actualiza los datos de un paciente")
     public ResponseEntity<?> updatePatient(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody PatientUpdateRequestDto updateDto) {
         return ResponseEntity.ok(patientGatewayService.updatePatient(id, updateDto));
     }
 
     @PatchMapping("/patients/{id}/deactivate")
     @Operation(summary = "Desactivar paciente", description = "Desactiva un paciente cambiando su status")
-    public ResponseEntity<?> deactivatePatient(@PathVariable String id) {
+    public ResponseEntity<?> deactivatePatient(@PathVariable("id") String id) {
         return ResponseEntity.ok(patientGatewayService.deactivatePatient(id));
     }
 
     @DeleteMapping("/patients/{id}")
     @Operation(summary = "Eliminar paciente", description = "Elimina un paciente del sistema")
-    public ResponseEntity<Void> deletePatient(@PathVariable String id) {
+    public ResponseEntity<Void> deletePatient(@PathVariable("id") String id) {
         patientGatewayService.deletePatient(id);
         return ResponseEntity.noContent().build();
     }
@@ -387,7 +386,7 @@ public class GatewayController {
 
     @GetMapping("/tumor-types/{id}")
     @Operation(summary = "Obtener tipo de tumor por ID", description = "Obtiene un tipo de tumor específico")
-    public ResponseEntity<?> getTumorTypeById(@PathVariable Long id) {
+    public ResponseEntity<?> getTumorTypeById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(tumorTypeGatewayService.getTumorTypeById(id));
     }
 
@@ -401,14 +400,14 @@ public class GatewayController {
     @PatchMapping("/tumor-types/{id}")
     @Operation(summary = "Actualizar tipo de tumor", description = "Actualiza un tipo de tumor")
     public ResponseEntity<?> updateTumorType(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody UpdateTumorTypeInDto updateDto) {
         return ResponseEntity.ok(tumorTypeGatewayService.updateTumorType(id, updateDto));
     }
 
     @DeleteMapping("/tumor-types/{id}")
     @Operation(summary = "Eliminar tipo de tumor", description = "Elimina un tipo de tumor")
-    public ResponseEntity<Void> deleteTumorType(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTumorType(@PathVariable("id") Long id) {
         tumorTypeGatewayService.deleteTumorType(id);
         return ResponseEntity.noContent().build();
     }

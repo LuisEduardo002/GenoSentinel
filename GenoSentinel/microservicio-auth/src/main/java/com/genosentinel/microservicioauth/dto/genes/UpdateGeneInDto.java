@@ -1,9 +1,8 @@
 package com.genosentinel.microservicioauth.dto.genes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-
-import javax.validation.constraints.Size;
 
 /**
  * DTO para actualizar un gen existente en el microservicio de Genómica.

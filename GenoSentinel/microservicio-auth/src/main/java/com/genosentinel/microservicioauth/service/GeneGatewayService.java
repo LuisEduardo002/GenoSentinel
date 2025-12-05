@@ -74,7 +74,9 @@ public class GeneGatewayService {
      * Busca genes por símbolo.
      */
     public Object searchGeneBySymbol(String symbol) {
-        String url = getGenomicaUrl() + "/api/genes/search/?symbol=" + symbol;
+        // En el microservicio de Genómica la búsqueda se hace sobre el endpoint de lista
+        // usando el parámetro de query "search" (no existe /api/genes/search/).
+        String url = getGenomicaUrl() + "/api/genes/?search=" + symbol;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -161,8 +163,12 @@ public class GeneGatewayService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
 
+            // El backend de Genómica usa el mismo serializer de actualización
+            // para PUT y PATCH, aceptando actualizaciones parciales. Además,
+            // el cliente HTTP actual puede no soportar correctamente PATCH,
+            // por lo que aquí enviamos un PUT interno.
             ResponseEntity<Object> response = restTemplate.exchange(
-                    url, HttpMethod.PATCH, request, Object.class);
+                    url, HttpMethod.PUT, request, Object.class);
             return response.getBody();
 
         } catch (HttpClientErrorException | HttpServerErrorException e) {

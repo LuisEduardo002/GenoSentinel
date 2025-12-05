@@ -1,10 +1,9 @@
 package com.genosentinel.microservicioauth.dto.variants;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
 /**
  * DTO para actualizar una variante genética en el microservicio de Genómica.
