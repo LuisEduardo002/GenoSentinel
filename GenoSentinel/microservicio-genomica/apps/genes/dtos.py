@@ -23,6 +23,7 @@ class GeneCreateDTO:
 @dataclass
 class GeneUpdateDTO:
     """DTO para actualización de genes"""
+    symbol: Optional[str] = None
     full_name: Optional[str] = None
     function_summary: Optional[str] = None
 

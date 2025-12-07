@@ -50,8 +50,9 @@ class GeneUpdateSerializer(serializers.Serializer):
     """
     Serializer de Entrada (Input Adapter): Valida JSON y lo convierte a GeneUpdateDTO.
     """
-    full_name = serializers.CharField(max_length=255, required=False)
-    function_summary = serializers.CharField(required=False)
+    symbol = serializers.CharField(max_length=50)
+    full_name = serializers.CharField(max_length=255)
+    function_summary = serializers.CharField()
     
     def create(self, validated_data):
         """Crea un UpdateDTO desde datos validados"""

@@ -62,6 +62,12 @@ class GeneService:
         if not gene:
             raise ObjectDoesNotExist(f"Gen con ID {gene_id} no encontrado")
             
+        # Validar unicidad del símbolo si se está actualizando
+        if update_dto.symbol is not None:
+            existing_gene = self.repository.get_by_symbol(update_dto.symbol)
+            if existing_gene and existing_gene.id != gene_id:
+                raise IntegrityError(f"El símbolo de gen '{update_dto.symbol}' ya está en uso por otro gen.")
+            
         updated_gene = self.repository.update(gene, update_dto)
         return GeneMapper.to_dto(updated_gene)
 
