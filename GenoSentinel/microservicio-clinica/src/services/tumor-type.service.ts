@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TumorType } from '../entities/tumor-type.entity';
@@ -13,6 +13,17 @@ export class TumorTypeService {
   ) {}
 
   async create(createTumorTypeDto: CreateTumorTypeDto): Promise<TumorType> {
+    // Validar unicidad por nombre de tipo de tumor
+    const existing = await this.tumorTypeRepository.findOne({
+      where: { name: createTumorTypeDto.name },
+    });
+
+    if (existing) {
+      throw new BadRequestException(
+        `Ya existe un tipo de tumor con el nombre ${createTumorTypeDto.name}`,
+      );
+    }
+
     const tumorType = this.tumorTypeRepository.create(createTumorTypeDto);
     return await this.tumorTypeRepository.save(tumorType);
   }

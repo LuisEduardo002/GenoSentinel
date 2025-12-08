@@ -41,6 +41,9 @@ public class CreateGeneticVariantInDto {
 
     @JsonProperty("impact")
     @NotBlank(message = "El impacto es obligatorio")
-    @Pattern(regexp = "HIGH|MODERATE|LOW|MODIFIER", message = "El impacto debe ser HIGH, MODERATE, LOW o MODIFIER")
+    @Pattern(
+        regexp = "MISSENSE|FRAMESHIFT|NONSENSE|SILENT|SPLICE_SITE",
+        message = "El impacto debe ser MISSENSE, FRAMESHIFT, NONSENSE, SILENT o SPLICE_SITE"
+    )
     private String impact;
 }

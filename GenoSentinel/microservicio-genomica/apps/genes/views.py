@@ -237,9 +237,53 @@ class GeneViewSet(viewsets.ViewSet):
             )
     
     def partial_update(self, request, pk=None):
-        """Actualiza parcialmente un gen"""
-        # Reutiliza la lógica de update, ya que UpdateSerializer maneja campos opcionales
-        return self.update(request, pk)
+        """Actualiza parcialmente un gen (PATCH)."""
+        try:
+            # 1. Validar formato UUID
+            try:
+                from uuid import UUID
+                gene_id = UUID(pk)
+            except (ValueError, AttributeError, TypeError):
+                return Response(
+                    {'error': f'ID inválido: "{pk}" no es un UUID válido'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 2. Validar y deserializar JSON a UpdateDTO con partial=True
+            serializer = GeneUpdateSerializer(data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+
+            # 3. Obtener DTO de entrada
+            update_dto = serializer.save()
+
+            # 4. Llamar al Service (lógica de negocio)
+            result_dto = gene_service.update_gene(gene_id, update_dto)
+
+            # 5. Serializar DTO a JSON (Serializer de Salida)
+            result_serializer = GeneSerializer(result_dto)
+
+            return Response(result_serializer.data, status=status.HTTP_200_OK)
+
+        except ObjectDoesNotExist as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except IntegrityError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Error al actualizar el gen: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def destroy(self, request, pk=None):
         """Elimina un gen"""

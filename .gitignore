@@ -3,3 +3,29 @@
 
 # Enunciado local
 proyecto_final.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+.env/
+
+# Node / NestJS
+node_modules/
+dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db

@@ -71,10 +71,10 @@ class GeneticVariantUpdateSerializer(serializers.Serializer):
     """
     impact = serializers.ChoiceField(
         choices=[(e.value, e.value) for e in ImpactType],
-        required=False
+        required=True
     )
-    reference_base = serializers.CharField(max_length=100, required=False)
-    alternate_base = serializers.CharField(max_length=100, required=False)
+    reference_base = serializers.CharField(max_length=100, required=True)
+    alternate_base = serializers.CharField(max_length=100, required=True)
     
     def create(self, validated_data):
         """Crea un UpdateDTO desde datos validados"""

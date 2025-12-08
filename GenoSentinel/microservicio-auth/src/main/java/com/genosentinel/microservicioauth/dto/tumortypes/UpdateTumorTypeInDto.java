@@ -1,5 +1,6 @@
 package com.genosentinel.microservicioauth.dto.tumortypes;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.Data;
  * Mapea campos del DTO UpdateTumorTypeDto de NestJS.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdateTumorTypeInDto {
 
     @JsonProperty("name")

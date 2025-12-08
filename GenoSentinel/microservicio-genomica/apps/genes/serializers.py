@@ -47,11 +47,14 @@ class GeneCreateSerializer(serializers.Serializer):
 
 
 class GeneUpdateSerializer(serializers.Serializer):
+    """ 
+    Serializer de Entrada (Input Adapter) para updates (PUT/PATCH).
+    - En PUT (partial=False) se exigirán los tres campos.
+    - En PATCH (partial=True) se podrán enviar solo algunos.
     """
-    Serializer de Entrada (Input Adapter): Valida JSON y lo convierte a GeneUpdateDTO.
-    """
-    full_name = serializers.CharField(max_length=255, required=False)
-    function_summary = serializers.CharField(required=False)
+    symbol = serializers.CharField(max_length=50, required=True)
+    full_name = serializers.CharField(max_length=255, required=True)
+    function_summary = serializers.CharField(required=True)
     
     def create(self, validated_data):
         """Crea un UpdateDTO desde datos validados"""

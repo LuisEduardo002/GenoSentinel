@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { TumorTypeService } from '../services/tumor-type.service';
 import { CreateTumorTypeDto } from '../dto/create-tumor-type.dto';
@@ -38,6 +38,7 @@ export class TumorTypeController {
   }
 
   @Patch('update/:id')
+  @Put('update/:id')
   @ApiOperation({ summary: 'Actualizar un tipo de tumor' })
   @ApiParam({ name: 'id', description: 'ID del tipo de tumor' })
   @ApiResponse({ status: 200, description: 'Tipo de tumor actualizado exitosamente.' })

@@ -30,7 +30,9 @@ public class ClinicalRecordGatewayService {
      * Obtiene todos los registros clínicos.
      */
     public Object getAllClinicalRecords() {
-        String url = getClinicaUrl() + "/genosentinel/clinica/clinical-records";
+        // En el microservicio de Clínica, los registros clínicos están
+        // expuestos bajo el prefijo /clinical-records.
+        String url = getClinicaUrl() + "/clinical-records";
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -55,8 +57,8 @@ public class ClinicalRecordGatewayService {
     /**
      * Obtiene un registro clínico por su ID.
      */
-    public Object getClinicalRecordById(Long id) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/clinical-records/" + id;
+    public Object getClinicalRecordById(String id) {
+        String url = getClinicaUrl() + "/clinical-records/get/" + id;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -82,7 +84,7 @@ public class ClinicalRecordGatewayService {
      * Obtiene registros clínicos por ID de paciente.
      */
     public Object getClinicalRecordsByPatient(String patientId) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/clinical-records/patient/" + patientId;
+        String url = getClinicaUrl() + "/clinical-records?patientId=" + patientId;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -108,7 +110,7 @@ public class ClinicalRecordGatewayService {
      * Crea un nuevo registro clínico.
      */
     public Object createClinicalRecord(CreateClinicalRecordInDto createDto) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/clinical-records";
+        String url = getClinicaUrl() + "/clinical-records/create";
 
         try {
             String jsonBody = objectMapper.writeValueAsString(createDto);
@@ -139,8 +141,8 @@ public class ClinicalRecordGatewayService {
     /**
      * Actualiza un registro clínico.
      */
-    public Object updateClinicalRecord(Long id, UpdateClinicalRecordInDto updateDto) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/clinical-records/" + id;
+    public Object updateClinicalRecord(String id, UpdateClinicalRecordInDto updateDto) {
+        String url = getClinicaUrl() + "/clinical-records/update/" + id;
 
         try {
             String jsonBody = objectMapper.writeValueAsString(updateDto);
@@ -171,8 +173,8 @@ public class ClinicalRecordGatewayService {
     /**
      * Elimina un registro clínico.
      */
-    public void deleteClinicalRecord(Long id) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/clinical-records/" + id;
+    public void deleteClinicalRecord(String id) {
+        String url = getClinicaUrl() + "/clinical-records/delete/" + id;
 
         try {
             restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);

@@ -74,7 +74,9 @@ public class GeneticVariantGatewayService {
      * Obtiene variantes por gen.
      */
     public Object getVariantsByGene(String geneSymbol) {
-        String url = getGenomicaUrl() + "/api/variants/by-gene/" + geneSymbol + "/";
+        // En el microservicio de Genómica la acción se llama by_gene y recibe
+        // el símbolo del gen como query param gene_symbol.
+        String url = getGenomicaUrl() + "/api/variants/by_gene/?gene_symbol=" + geneSymbol;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -96,7 +98,9 @@ public class GeneticVariantGatewayService {
      * Obtiene variantes por cromosoma.
      */
     public Object getVariantsByChromosome(String chromosome) {
-        String url = getGenomicaUrl() + "/api/variants/by-chromosome/" + chromosome + "/";
+        // En el microservicio de Genómica la acción se llama by_chromosome y
+        // recibe el cromosoma como query param "chr" (ej: chr17).
+        String url = getGenomicaUrl() + "/api/variants/by_chromosome/?chr=" + chromosome;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(

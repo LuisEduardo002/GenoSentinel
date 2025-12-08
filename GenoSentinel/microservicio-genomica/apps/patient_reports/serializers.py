@@ -107,8 +107,8 @@ class PatientVariantReportUpdateSerializer(serializers.Serializer):
     """
     Serializer de Entrada (Input Adapter): Valida JSON y lo convierte a PatientVariantReportUpdateDTO.
     """
-    detection_date = serializers.DateField(required=False)
-    allele_frequency = serializers.DecimalField(max_digits=5, decimal_places=4, required=False)
+    detection_date = serializers.DateField()
+    allele_frequency = serializers.DecimalField(max_digits=5, decimal_places=4)
     
     def validate_allele_frequency(self, value):
         if value is not None and (value < Decimal('0') or value > Decimal('1')):

@@ -33,7 +33,9 @@ public class PatientGatewayService {
      * Obtiene todos los pacientes, opcionalmente filtrados por status.
      */
     public Object getPatients(String status) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/patients";
+        // En NestJS el controlador está definido como @Controller("patients")
+        // y este método corresponde a GET /patients
+        String url = getClinicaUrl() + "/patients";
         if (status != null && !status.isEmpty()) {
             url = url + "?status=" + status;
         }
@@ -62,7 +64,8 @@ public class PatientGatewayService {
      * Obtiene un paciente por su ID.
      */
     public Object getPatientById(String id) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/patients/get/" + id;
+        // Método findOne -> GET /patients/get/:id
+        String url = getClinicaUrl() + "/patients/get/" + id;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -88,7 +91,8 @@ public class PatientGatewayService {
      * Crea un nuevo paciente.
      */
     public Object createPatient(PatientCreateRequestDto createDto) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/patients/create";
+        // Método create -> POST /patients/create
+        String url = getClinicaUrl() + "/patients/create";
 
         try {
             String jsonBody = objectMapper.writeValueAsString(createDto);
@@ -120,7 +124,8 @@ public class PatientGatewayService {
      * Actualiza un paciente.
      */
     public Object updatePatient(String id, PatientUpdateRequestDto updateDto) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/patients/update/" + id;
+        // Método update -> PATCH /patients/update/:id
+        String url = getClinicaUrl() + "/patients/update/" + id;
 
         try {
             String jsonBody = objectMapper.writeValueAsString(updateDto);
@@ -152,7 +157,8 @@ public class PatientGatewayService {
      * Desactiva un paciente.
      */
     public Object deactivatePatient(String id) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/patients/deactivate/" + id;
+        // Método deactivate -> PATCH /patients/deactivate/:id
+        String url = getClinicaUrl() + "/patients/deactivate/" + id;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -178,7 +184,8 @@ public class PatientGatewayService {
      * Elimina un paciente.
      */
     public void deletePatient(String id) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/patients/delete/" + id;
+        // Método remove -> DELETE /patients/delete/:id
+        String url = getClinicaUrl() + "/patients/delete/" + id;
 
         try {
             restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);

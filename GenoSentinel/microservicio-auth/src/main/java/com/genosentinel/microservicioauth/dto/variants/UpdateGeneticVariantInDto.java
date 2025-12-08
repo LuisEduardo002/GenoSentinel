@@ -1,5 +1,6 @@
 package com.genosentinel.microservicioauth.dto.variants;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -10,6 +11,7 @@ import lombok.Data;
  * Mapea campos del serializer GeneticVariantUpdateSerializer de Django.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdateGeneticVariantInDto {
 
     @JsonProperty("reference_base")
@@ -21,6 +23,9 @@ public class UpdateGeneticVariantInDto {
     private String alternateBase;
 
     @JsonProperty("impact")
-    @Pattern(regexp = "HIGH|MODERATE|LOW|MODIFIER", message = "El impacto debe ser HIGH, MODERATE, LOW o MODIFIER")
+    @Pattern(
+        regexp = "MISSENSE|FRAMESHIFT|NONSENSE|SILENT|SPLICE_SITE",
+        message = "El impacto debe ser MISSENSE, FRAMESHIFT, NONSENSE, SILENT o SPLICE_SITE"
+    )
     private String impact;
 }

@@ -30,7 +30,9 @@ public class TumorTypeGatewayService {
      * Obtiene todos los tipos de tumor.
      */
     public Object getAllTumorTypes() {
-        String url = getClinicaUrl() + "/genosentinel/clinica/tumor-types";
+        // En NestJS el controlador está definido como @Controller("tumor-types")
+        // y este método corresponde a GET /tumor-types
+        String url = getClinicaUrl() + "/tumor-types";
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -56,7 +58,8 @@ public class TumorTypeGatewayService {
      * Obtiene un tipo de tumor por su ID.
      */
     public Object getTumorTypeById(Long id) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/tumor-types/" + id;
+        // Método findOne -> GET /tumor-types/get/:id
+        String url = getClinicaUrl() + "/tumor-types/get/" + id;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -82,7 +85,8 @@ public class TumorTypeGatewayService {
      * Crea un nuevo tipo de tumor.
      */
     public Object createTumorType(CreateTumorTypeInDto createDto) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/tumor-types";
+        // Método create -> POST /tumor-types/create
+        String url = getClinicaUrl() + "/tumor-types/create";
 
         try {
             String jsonBody = objectMapper.writeValueAsString(createDto);
@@ -114,7 +118,8 @@ public class TumorTypeGatewayService {
      * Actualiza un tipo de tumor.
      */
     public Object updateTumorType(Long id, UpdateTumorTypeInDto updateDto) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/tumor-types/" + id;
+        // Método update -> PATCH /tumor-types/update/:id
+        String url = getClinicaUrl() + "/tumor-types/update/" + id;
 
         try {
             String jsonBody = objectMapper.writeValueAsString(updateDto);
@@ -146,7 +151,8 @@ public class TumorTypeGatewayService {
      * Elimina un tipo de tumor.
      */
     public void deleteTumorType(Long id) {
-        String url = getClinicaUrl() + "/genosentinel/clinica/tumor-types/" + id;
+        // Método remove -> DELETE /tumor-types/delete/:id
+        String url = getClinicaUrl() + "/tumor-types/delete/" + id;
 
         try {
             restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);

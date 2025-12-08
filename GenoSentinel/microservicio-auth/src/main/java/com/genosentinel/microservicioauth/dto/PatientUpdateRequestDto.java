@@ -1,5 +1,8 @@
 package com.genosentinel.microservicioauth.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PatientUpdateRequestDto {
     private String firstName;
     private String lastName;

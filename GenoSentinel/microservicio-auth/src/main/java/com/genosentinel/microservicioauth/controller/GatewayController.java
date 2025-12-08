@@ -302,7 +302,7 @@ public class GatewayController {
 
     @GetMapping("/clinical-records/{id}")
     @Operation(summary = "Obtener registro clínico por ID", description = "Obtiene un registro clínico específico")
-    public ResponseEntity<?> getClinicalRecordById(@PathVariable("id") Long id) {
+    public ResponseEntity<?> getClinicalRecordById(@PathVariable("id") String id) {
         return ResponseEntity.ok(clinicalRecordGatewayService.getClinicalRecordById(id));
     }
 
@@ -322,14 +322,14 @@ public class GatewayController {
     @PatchMapping("/clinical-records/{id}")
     @Operation(summary = "Actualizar registro clínico", description = "Actualiza un registro clínico")
     public ResponseEntity<?> updateClinicalRecord(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @Valid @RequestBody UpdateClinicalRecordInDto updateDto) {
         return ResponseEntity.ok(clinicalRecordGatewayService.updateClinicalRecord(id, updateDto));
     }
 
     @DeleteMapping("/clinical-records/{id}")
     @Operation(summary = "Eliminar registro clínico", description = "Elimina un registro clínico")
-    public ResponseEntity<Void> deleteClinicalRecord(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deleteClinicalRecord(@PathVariable("id") String id) {
         clinicalRecordGatewayService.deleteClinicalRecord(id);
         return ResponseEntity.noContent().build();
     }

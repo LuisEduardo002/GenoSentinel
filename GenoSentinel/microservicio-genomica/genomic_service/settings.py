@@ -153,7 +153,7 @@ CORS_ALLOWED_ORIGINS = config(
 
 CLINICAL_SERVICE_URL = config(
     'CLINICAL_SERVICE_URL', 
-    default='http://localhost:3007'
+    default='http://localhost:3001'
 )
 
 # URL del Microservicio de Autenticacion

@@ -22,7 +22,8 @@ class GeneCreateDTO:
 
 @dataclass
 class GeneUpdateDTO:
-    """DTO para actualización de genes"""
+    """DTO para actualización de genes (PUT/PATCH). Los campos son opcionales en el DTO para permitir updates parciales."""
+    symbol: Optional[str] = None
     full_name: Optional[str] = None
     function_summary: Optional[str] = None
 

@@ -39,6 +39,8 @@ class GeneMapper:
     @staticmethod
     def update_model_from_dto(gene: Gene, dto: GeneUpdateDTO) -> Gene:
         """Actualiza un Model existente desde un UpdateDTO"""
+        if getattr(dto, "symbol", None) is not None:
+            gene.symbol = dto.symbol.upper()
         if dto.full_name is not None:
             gene.full_name = dto.full_name
         if dto.function_summary is not None:

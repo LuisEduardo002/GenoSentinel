@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Patient } from '../entities/patient.entity';
@@ -13,6 +13,20 @@ export class PatientService {
   ) {}
 
   async create(createPatientDto: CreatePatientDto): Promise<Patient> {
+    // Validar unicidad por firstName + lastName
+    const existing = await this.patientRepository.findOne({
+      where: {
+        firstName: createPatientDto.firstName,
+        lastName: createPatientDto.lastName,
+      },
+    });
+
+    if (existing) {
+      throw new BadRequestException(
+        `Ya existe un paciente con el nombre ${createPatientDto.firstName} ${createPatientDto.lastName}`,
+      );
+    }
+
     const patient = this.patientRepository.create({
       ...createPatientDto,
       birthDate: new Date(createPatientDto.birthDate),
@@ -59,6 +73,12 @@ export class PatientService {
 
   async deactivate(id: string): Promise<Patient> {
     const patient = await this.findOne(id);
+    if (patient.status === 'Inactivo') {
+      throw new BadRequestException(
+        `El paciente con ID ${id} ya se encuentra inactivo`,
+      );
+    }
+
     patient.status = 'Inactivo';
     return await this.patientRepository.save(patient);
   }

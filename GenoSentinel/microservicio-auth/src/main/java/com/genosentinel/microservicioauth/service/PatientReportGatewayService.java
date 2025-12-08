@@ -20,7 +20,7 @@ import org.springframework.web.client.RestTemplate;
 public class PatientReportGatewayService {
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private String getGenomicaUrl() {
         return System.getenv().getOrDefault("GENOMICA_BASE_URL", "http://localhost:8000");
@@ -96,7 +96,7 @@ public class PatientReportGatewayService {
      * Obtiene el resumen de un paciente (integración clínica + genómica).
      */
     public Object getPatientSummary(String patientId) {
-        String url = getGenomicaUrl() + "/api/patient-reports/summary/" + patientId + "/";
+        String url = getGenomicaUrl() + "/api/patient-reports/patient/" + patientId + "/";
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -118,7 +118,7 @@ public class PatientReportGatewayService {
      * Obtiene estadísticas de un paciente.
      */
     public Object getPatientStatistics(String patientId) {
-        String url = getGenomicaUrl() + "/api/patient-reports/patient/" + patientId + "/statistics/";
+        String url = getGenomicaUrl() + "/api/patient-reports/patient_statistics/?patient_id=" + patientId;
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(
@@ -244,7 +244,7 @@ public class PatientReportGatewayService {
      * Obtiene estadísticas generales de reportes.
      */
     public Object getGeneralStatistics() {
-        String url = getGenomicaUrl() + "/api/patient-reports/statistics/";
+        String url = getGenomicaUrl() + "/api/patient-reports/general_statistics/";
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(

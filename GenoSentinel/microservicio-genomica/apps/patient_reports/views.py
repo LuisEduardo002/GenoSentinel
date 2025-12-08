@@ -180,8 +180,32 @@ class PatientVariantReportViewSet(viewsets.ViewSet):
     
     def partial_update(self, request, pk=None):
         """Actualiza parcialmente un reporte"""
-        # Reutiliza la lógica de update, ya que UpdateSerializer maneja campos opcionales
-        return self.update(request, pk)
+        # 1. Validar y deserializar JSON a UpdateDTO (Serializer de Entrada) en modo parcial
+        serializer = PatientVariantReportUpdateSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # 2. Obtener DTO de entrada
+        update_dto = serializer.save()
+
+        try:
+            # 3. Llamar al Service (lógica de negocio)
+            result_dto = report_service.update_report(UUID(pk), update_dto)
+
+            # 4. Serializar DTO a JSON (Serializer de Salida)
+            result_serializer = PatientVariantReportSerializer(result_dto)
+
+            return Response(result_serializer.data)
+
+        except ObjectDoesNotExist as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
     def destroy(self, request, pk=None):
         """Elimina un reporte de paciente"""

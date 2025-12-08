@@ -1,5 +1,6 @@
 package com.genosentinel.microservicioauth.dto.reports;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -14,6 +15,7 @@ import java.time.LocalDate;
  * Mapea campos del serializer PatientVariantReportUpdateSerializer de Django.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdatePatientReportInDto {
 
     @JsonProperty("detection_date")
