@@ -19,9 +19,9 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: CLINICA_BASE_URL
-              value: "http://nestjs-clinica:3000"
+              value: "http://microservicio-clinica:3001"
             - name: GENOMICA_BASE_URL
-              value: "http://django-genomica:8000"
+              value: "http://microservicio-genomica:8000"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:

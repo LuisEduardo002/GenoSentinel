@@ -12,9 +12,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-bx8s!dnt!)&7h%%_!j=g@ftw_s(oa@p(jb$+0%4+3%o%o3vmk5'
 
 
-DEBUG = True
+DEBUG = False  # Set to True for local development
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # Configure appropriately for production
 
 
 # Aplicaciones instaladas
@@ -147,19 +147,19 @@ SPECTACULAR_SETTINGS = {
 # Configuraciones de CORS 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ORIGINS',
-    default='http://localhost:4200,http://localhost:3000',
+    default='http://microservicio-auth:8080',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
 CLINICAL_SERVICE_URL = config(
     'CLINICAL_SERVICE_URL', 
-    default='http://localhost:3001'
+    default='http://microservicio-clinica:3001'
 )
 
 # URL del Microservicio de Autenticacion
 GATEWAY_SERVICE_URL = config(
     'GATEWAY_SERVICE_URL', 
-    default='http://localhost:8081'
+    default='http://microservicio-auth:8080'
 )
 
 # Timeout para llamadas HTTP entre microservicios

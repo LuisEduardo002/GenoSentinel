@@ -11,6 +11,8 @@ data:
   DB_PORT: "3306"
   CLINICAL_SERVICE_URL: "http://microservicio-clinica:3001"
   CLINICA_BASE_URL: "http://microservicio-clinica:3001"
+  GATEWAY_SERVICE_URL: "http://microservicio-auth:8080"
+
 ---
 apiVersion: v1
 kind: Secret

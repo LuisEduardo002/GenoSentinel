@@ -23,8 +23,8 @@ import { ClinicalRecord } from './entities/clinical-record.entity';
       password: process.env.DB_PASSWORD || 'hola1234',
       database: process.env.DB_DATABASE || 'genosentinel_clinica',
       entities: [Patient, TumorType, ClinicalRecord],
-      synchronize: process.env.NODE_ENV === 'development',
-      logging: process.env.NODE_ENV === 'development',
+      synchronize: true, // process.env.NODE_ENV === 'development',
+      logging: true, // process.env.NODE_ENV === 'development',
     }),
     TypeOrmModule.forFeature([Patient, TumorType, ClinicalRecord]),
     PatientModule,
@@ -34,4 +34,4 @@ import { ClinicalRecord } from './entities/clinical-record.entity';
   controllers: [HealthController],
   providers: [DatabaseService],
 })
-export class AppModule {}
+export class AppModule { }
